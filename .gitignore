@@ -1,0 +1,21 @@
+# C++ build artifacts
+cpp/build/
+
+# Python virtual environment
+python/venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# VS Code settings
+.vscode/
+
+# Audio test files
+python/noisy_input.wav
+python/clean_output.wav
+
+# Windows artifacts
+Thumbs.db
+desktop.ini

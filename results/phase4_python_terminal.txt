@@ -1,10 +1,34 @@
 Loading DeepFilterNet model...
-2026-04-27 12:42:47 | INFO     | DF | Running on torch 2.0.1+cpu
-2026-04-27 12:42:47 | INFO     | DF | Running on host DESKTOP-R02PTCP
-2026-04-27 12:42:47 | INFO     | DF | Git commit: 1d452ec, branch: feature/phase4-optimization
-2026-04-27 12:42:47 | INFO     | DF | Loading model settings of DeepFilterNet3
-2026-04-27 12:42:47 | INFO     | DF | Using DeepFilterNet3 model at C:\Users\Luciano Muratore\AppData\Local\DeepFilterNet\DeepFilterNet\Cache\DeepFilterNet3
-2026-04-27 12:42:47 | INFO     | DF | Initializing model `deepfilternet3`
-2026-04-27 12:42:47 | INFO     | DF | Found checkpoint C:\Users\Luciano Muratore\AppData\Local\DeepFilterNet\DeepFilterNet\Cache\DeepFilterNet3\checkpoints\model_120.ckpt.best with epoch 120
-2026-04-27 12:42:48 | INFO     | DF | Running on device cpu
-2026-04-27 12:42:48 | INFO     | DF | Model loaded
+INFO | DF | Running on torch 2.0.1+cpu
+INFO | DF | Running on host DESKTOP-R02PTCP
+INFO | DF | Git commit: fbe8c2e, branch: feature/phase4-optimization
+INFO | DF | Loading model settings of DeepFilterNet3
+INFO | DF | Using DeepFilterNet3 model at C:\Users\Luciano Muratore\AppData\Local\DeepFilterNet\DeepFilterNet\Cache\DeepFilterNet3
+INFO | DF | Initializing model deepfilternet3
+INFO | DF | Found checkpoint model_120.ckpt.best with epoch 120
+INFO | DF | Running on device cpu
+INFO | DF | Model loaded
+Model loaded!
+Async server listening:
+  PULL noisy audio on tcp://127.0.0.1:5555
+  PUSH clean audio on tcp://127.0.0.1:5556
+Waiting for audio chunks from C++...
+Receiver thread started.
+Processor thread started.
+Sender thread started.
+All threads running!
+Press Ctrl+C to stop.
+Processed 50 chunks (1.7s)  | Queue: in=0 out=1
+Processed 100 chunks (3.5s) | Queue: in=0 out=1
+Processed 150 chunks (5.2s) | Queue: in=0 out=1
+Processed 200 chunks (7.0s) | Queue: in=0 out=1
+Processed 250 chunks (8.7s) | Queue: in=0 out=1
+Processed 300 chunks (10.4s)| Queue: in=0 out=1
+Processed 350 chunks (12.2s)| Queue: in=0 out=1
+Processed 400 chunks (13.9s)| Queue: in=0 out=1
+Processed 450 chunks (15.7s)| Queue: in=0 out=1
+Processed 500 chunks (17.4s)| Queue: in=0 out=1
+Processed 550 chunks (19.2s)| Queue: in=0 out=1
+Processed 600 chunks (20.9s)| Queue: in=0 out=1
+Processed 650 chunks (22.6s)| Queue: in=0 out=1
+Processed 700 chunks (24.4s)| Queue: in=0 out=1

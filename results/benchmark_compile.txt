@@ -1,0 +1,41 @@
+=== torch.compile() Benchmark ===
+Chunks to test:   50
+Frames per chunk: 1536
+Buffer period:    34.8ms
+(audio must be processed faster than buffer period)
+
+Loading DeepFilterNet model...
+2026-04-27 12:01:47 | INFO     | DF | Running on torch 2.0.1+cpu
+2026-04-27 12:01:47 | INFO     | DF | Running on host DESKTOP-R02PTCP
+2026-04-27 12:01:48 | INFO     | DF | Git commit: 042d78f, branch: feature/phase4-optimization
+2026-04-27 12:01:48 | INFO     | DF | Loading model settings of DeepFilterNet3
+2026-04-27 12:01:48 | INFO     | DF | Using DeepFilterNet3 model at C:\Users\Luciano Muratore\AppData\Local\DeepFilterNet\DeepFilterNet\Cache\DeepFilterNet3
+2026-04-27 12:01:48 | INFO     | DF | Initializing model `deepfilternet3`
+2026-04-27 12:01:48 | INFO     | DF | Found checkpoint C:\Users\Luciano Muratore\AppData\Local\DeepFilterNet\DeepFilterNet\Cache\DeepFilterNet3\checkpoints\model_120.ckpt.best with epoch 120
+2026-04-27 12:01:48 | INFO     | DF | Running on device cpu
+2026-04-27 12:01:48 | INFO     | DF | Model loaded
+Model loaded!
+Compiling model with torch.compile()...
+(this takes 30-60 seconds on first run)
+
+torch.compile() failed: Windows not yet supported for torch.compile
+Falling back to standard PyTorch
+
+Warming up (first run triggers compilation)...
+Warm up done!
+
+Benchmarking 50 chunks...
+  Chunk  10: 27.3ms
+  Chunk  20: 27.0ms
+  Chunk  30: 29.9ms
+  Chunk  40: 15.7ms
+  Chunk  50: 29.7ms
+
+=== Results (torch.compile) ===
+Buffer period (budget): 34.8ms
+Average inference:      32.4ms
+Min inference:          15.7ms
+Max inference:          90.7ms
+Std deviation:          15.2ms
+
+PASS: Fast enough for real-time! (32.4ms < 34.8ms)

@@ -18,7 +18,6 @@ constexpr int NUM_CHANNELS = 1;
 // -----------------------------------------------
 // Device Selection — search by name
 // Change these strings to switch devices
-// without worrying about index numbers
 // -----------------------------------------------
 const std::string INPUT_DEVICE_NAME  = "Microphone (Realtek HD Audio Mic input)";
 const std::string OUTPUT_DEVICE_NAME = "Headphones";
@@ -39,16 +38,17 @@ struct AudioState {
 
 // -----------------------------------------------
 // Find device index by partial name match
-// needsInput = true  → look for input device
-// needsInput = false → look for output device
+// hostApi = -1 means any host API
 // Returns -1 if not found
 // -----------------------------------------------
-int findDevice(const std::string& name, bool needsInput) {
+int findDevice(const std::string& name, bool needsInput,
+               PaHostApiIndex hostApi = -1) {
     int deviceCount = Pa_GetDeviceCount();
     for (int i = 0; i < deviceCount; ++i) {
         const PaDeviceInfo* info = Pa_GetDeviceInfo(i);
         std::string deviceName(info->name);
         if (deviceName.find(name) != std::string::npos) {
+            if (hostApi >= 0 && info->hostApi != hostApi) continue;
             if (needsInput  && info->maxInputChannels  > 0) return i;
             if (!needsInput && info->maxOutputChannels > 0) return i;
         }
@@ -105,10 +105,12 @@ void listAudioDevices() {
     std::cout << "\n=== Available Audio Devices ===\n";
     for (int i = 0; i < deviceCount; ++i) {
         const PaDeviceInfo* info = Pa_GetDeviceInfo(i);
+        const PaHostApiInfo* api = Pa_GetHostApiInfo(info->hostApi);
         std::cout << "[" << i << "] " << info->name
                   << " | IN: "  << info->maxInputChannels
                   << " | OUT: " << info->maxOutputChannels
                   << " | SR: "  << info->defaultSampleRate
+                  << " | API: " << api->name
                   << "\n";
     }
     std::cout << "Default Input:  " << Pa_GetDefaultInputDevice() << "\n";
@@ -145,16 +147,33 @@ int main() {
 
     listAudioDevices();
 
-    // 3. Find devices by name — immune to index reshuffling
-    int inputDevice  = findDevice(INPUT_DEVICE_NAME,  true);
-    int outputDevice = findDevice(OUTPUT_DEVICE_NAME, false);
-
+    // 3. Find input device by name
+    int inputDevice = findDevice(INPUT_DEVICE_NAME, true);
     if (inputDevice < 0) {
         std::cerr << "Input device not found: " << INPUT_DEVICE_NAME << "\n";
         std::cerr << "Check the device list above and update INPUT_DEVICE_NAME\n";
         Pa_Terminate();
         return 1;
     }
+
+    // 4. Get input device host API
+    //    Then search for output device on the SAME host API
+    //    This guarantees a legal combination
+    PaHostApiIndex hostApi = Pa_GetDeviceInfo(inputDevice)->hostApi;
+    std::cout << "Input device found:  [" << inputDevice << "] "
+              << Pa_GetDeviceInfo(inputDevice)->name << "\n";
+    std::cout << "Input host API:      "
+              << Pa_GetHostApiInfo(hostApi)->name << "\n\n";
+
+    // 5. Find output device on same host API first
+    int outputDevice = findDevice(OUTPUT_DEVICE_NAME, false, hostApi);
+
+    if (outputDevice < 0) {
+        // If not found on same API try any API
+        std::cout << "Output device not found on same API — trying any API...\n";
+        outputDevice = findDevice(OUTPUT_DEVICE_NAME, false);
+    }
+
     if (outputDevice < 0) {
         std::cerr << "Output device not found: " << OUTPUT_DEVICE_NAME << "\n";
         std::cerr << "Check the device list above and update OUTPUT_DEVICE_NAME\n";
@@ -162,7 +181,13 @@ int main() {
         return 1;
     }
 
-    // 4. Configure input (Realtek mic)
+    std::cout << "Output device found: [" << outputDevice << "] "
+              << Pa_GetDeviceInfo(outputDevice)->name << "\n";
+    std::cout << "Output host API:     "
+              << Pa_GetHostApiInfo(Pa_GetDeviceInfo(outputDevice)->hostApi)->name
+              << "\n\n";
+
+    // 6. Configure input (Realtek mic)
     PaStreamParameters inputParams;
     inputParams.device                    = inputDevice;
     inputParams.channelCount              = NUM_CHANNELS;
@@ -170,7 +195,7 @@ int main() {
     inputParams.suggestedLatency          = Pa_GetDeviceInfo(inputDevice)->defaultLowInputLatency;
     inputParams.hostApiSpecificStreamInfo = nullptr;
 
-    // 5. Configure output (headphones)
+    // 7. Configure output (headphones)
     PaStreamParameters outputParams;
     outputParams.device                    = outputDevice;
     outputParams.channelCount              = NUM_CHANNELS;
@@ -178,26 +203,25 @@ int main() {
     outputParams.suggestedLatency          = Pa_GetDeviceInfo(outputDevice)->defaultLowOutputLatency;
     outputParams.hostApiSpecificStreamInfo = nullptr;
 
-    std::cout << "Using devices:\n";
-    std::cout << "  Input:  [" << inputDevice  << "] "
-              << Pa_GetDeviceInfo(inputDevice)->name  << "\n";
-    std::cout << "  Output: [" << outputDevice << "] "
-              << Pa_GetDeviceInfo(outputDevice)->name << "\n";
-    std::cout << "  Sample Rate: " << SAMPLE_RATE << " Hz\n\n";
-
-    // 6. Verify format is supported
+    // 8. Verify format is supported
     PaError supported = Pa_IsFormatSupported(
         &inputParams, &outputParams, SAMPLE_RATE);
     if (supported != paFormatIsSupported) {
         std::cerr << "Format not supported: "
                   << Pa_GetErrorText(supported) << "\n";
-        std::cerr << "Try changing INPUT_DEVICE_NAME or OUTPUT_DEVICE_NAME\n";
+        std::cerr << "Input  API: "
+                  << Pa_GetHostApiInfo(Pa_GetDeviceInfo(inputDevice)->hostApi)->name
+                  << "\n";
+        std::cerr << "Output API: "
+                  << Pa_GetHostApiInfo(Pa_GetDeviceInfo(outputDevice)->hostApi)->name
+                  << "\n";
+        std::cerr << "Try updating INPUT_DEVICE_NAME or OUTPUT_DEVICE_NAME\n";
         Pa_Terminate();
         return 1;
     }
-    std::cout << "Format supported!\n\n";
+    std::cout << "Format supported at " << SAMPLE_RATE << " Hz!\n\n";
 
-    // 7. Open the stream
+    // 9. Open the stream
     AudioState state;
     PaStream*  stream;
 
@@ -218,7 +242,7 @@ int main() {
         return 1;
     }
 
-    // 8. Start the stream
+    // 10. Start the stream
     err = Pa_StartStream(stream);
     if (err != paNoError) {
         std::cerr << "Failed to start stream: " << Pa_GetErrorText(err) << "\n";
@@ -234,8 +258,8 @@ int main() {
     std::cout << "Speak into your laptop mic - noise will be cancelled!\n";
     std::cout << "Press ENTER to stop...\n\n";
 
-    // 9. Sender thread — pushes mic audio to Python continuously
-    //    Does not wait for reply — fully async
+    // 11. Sender thread — pushes mic audio to Python continuously
+    //     Does not wait for reply — fully async
     std::atomic<bool> running(true);
     int sentCount = 0;
 
@@ -254,7 +278,7 @@ int main() {
         }
     });
 
-    // 10. Receiver thread — pulls clean audio from Python
+    // 12. Receiver thread — pulls clean audio from Python
     //     Updates output buffer whenever clean audio is available
     //     Never blocks the audio callback
     int receivedCount = 0;
@@ -287,13 +311,13 @@ int main() {
         }
     });
 
-    // 11. Wait for ENTER
+    // 13. Wait for ENTER
     std::cin.get();
     running = false;
     senderThread.join();
     receiverThread.join();
 
-    // 12. Clean up
+    // 14. Clean up
     Pa_StopStream(stream);
     Pa_CloseStream(stream);
     Pa_Terminate();

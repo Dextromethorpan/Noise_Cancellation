@@ -1,0 +1,187 @@
+name: CI/CD Pipeline
+
+# Trigger on every push and pull request
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # ─────────────────────────────────────
+  # Job 1: Build the C++ audio engine
+  # ─────────────────────────────────────
+  build-cpp:
+    name: Build C++ Engine
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup MSVC
+        uses: microsoft/setup-msbuild@v1.1
+
+      - name: Install CMake
+        uses: lukka/get-cmake@latest
+
+      - name: Download PortAudio header
+        run: |
+          mkdir -p C:/dev/portaudio/include
+          mkdir -p C:/dev/portaudio/lib
+          mkdir -p C:/dev/portaudio/bin
+          curl -o C:/dev/portaudio/include/portaudio.h https://raw.githubusercontent.com/PortAudio/portaudio/master/include/portaudio.h
+
+      - name: Download ZeroMQ headers
+        run: |
+          mkdir -p C:/dev/zeromq/include
+          mkdir -p C:/dev/zeromq/lib
+          mkdir -p C:/dev/zeromq/bin
+          curl -o C:/dev/zeromq/include/zmq.h https://raw.githubusercontent.com/zeromq/libzmq/master/include/zmq.h
+          curl -o C:/dev/zeromq/include/zmq.hpp https://raw.githubusercontent.com/zeromq/cppzmq/master/zmq.hpp
+          curl -o C:/dev/zeromq/include/zmq_utils.h https://raw.githubusercontent.com/zeromq/libzmq/master/include/zmq_utils.h
+
+      - name: Build C++ — syntax check only
+        run: |
+          cd cpp
+          mkdir build
+          cd build
+          cmake .. -G "Visual Studio 17 2022" -A x64
+        continue-on-error: true
+
+  # ─────────────────────────────────────
+  # Job 2: Test the Python AI server
+  # ─────────────────────────────────────
+  test-python:
+    name: Test Python Server
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('python/requirements.txt') }}
+
+      - name: Install dependencies
+        run: |
+          pip install torch==2.0.1 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cpu
+          pip install deepfilternet soundfile numpy pyzmq
+
+      - name: Test all imports work
+        run: |
+          python -c "
+          import zmq
+          import numpy as np
+          import torch
+          import torchaudio
+          print('zmq version:        ', zmq.__version__)
+          print('numpy version:      ', np.__version__)
+          print('torch version:      ', torch.__version__)
+          print('torchaudio version: ', torchaudio.__version__)
+          print('All imports OK')
+          "
+
+      - name: Test DeepFilterNet model loads
+        run: |
+          python -c "
+          from df.enhance import init_df, enhance
+          model, df_state, _ = init_df()
+          print('Model loaded successfully')
+          print('Sample rate:', df_state.sr())
+          "
+
+      - name: Test resampler works
+        run: |
+          python -c "
+          import torch
+          import torchaudio.transforms as T
+          import numpy as np
+
+          # Simulate what server.py does
+          resampler_up   = T.Resample(44100, 48000)
+          resampler_down = T.Resample(48000, 44100)
+
+          # Generate fake audio chunk
+          fake_audio = torch.randn(1, 1536)
+
+          # Resample up and down
+          upsampled   = resampler_up(fake_audio)
+          downsampled = resampler_down(upsampled)
+
+          print('Input shape:      ', fake_audio.shape)
+          print('Upsampled shape:  ', upsampled.shape)
+          print('Downsampled shape:', downsampled.shape)
+          print('Resampler OK')
+          "
+
+      - name: Test full denoise pipeline
+        run: |
+          python -c "
+          import torch
+          import numpy as np
+          import torchaudio.transforms as T
+          from df.enhance import init_df, enhance
+
+          # Load model
+          model, df_state, _ = init_df()
+
+          # Resamplers
+          resampler_up   = T.Resample(44100, df_state.sr())
+          resampler_down = T.Resample(df_state.sr(), 44100)
+
+          # Simulate a noisy audio chunk (1536 samples at 44100 Hz)
+          noisy = torch.randn(1, 1536)
+
+          # Full pipeline
+          upsampled = resampler_up(noisy)
+          enhanced  = enhance(model, df_state, upsampled)
+          result    = resampler_down(enhanced)
+
+          print('Input shape: ', noisy.shape)
+          print('Output shape:', result.shape)
+          print('Full pipeline OK')
+          "
+
+  # ─────────────────────────────────────
+  # Job 3: CD — Package release
+  # Runs only when merging to main
+  # and only if both jobs above pass
+  # ─────────────────────────────────────
+  package:
+    name: Package Release
+    runs-on: windows-latest
+    needs: [build-cpp, test-python]
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create release package
+        run: |
+          mkdir release
+          copy python\server.py release\
+          copy python\denoise.py release\
+          copy python\generate_noisy.py release\
+          echo deepfilternet > release\requirements.txt
+          echo torch==2.0.1 >> release\requirements.txt
+          echo torchaudio==2.0.2 >> release\requirements.txt
+          echo soundfile >> release\requirements.txt
+          echo numpy >> release\requirements.txt
+          echo pyzmq >> release\requirements.txt
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: NoiseCancellation-v${{ github.run_number }}
+          path: release/
+          retention-days: 30

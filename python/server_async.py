@@ -12,7 +12,7 @@ import time
 # -----------------------------------------------
 SAMPLE_RATE_HW    = 44100
 SAMPLE_RATE_MODEL = 48000
-FRAMES            = 1536
+FRAMES            = 512
 QUEUE_SIZE        = 10  # max chunks buffered in queue
 
 # -----------------------------------------------

@@ -1,0 +1,10 @@
+Loading DeepFilterNet model...
+2026-04-27 12:42:47 | INFO     | DF | Running on torch 2.0.1+cpu
+2026-04-27 12:42:47 | INFO     | DF | Running on host DESKTOP-R02PTCP
+2026-04-27 12:42:47 | INFO     | DF | Git commit: 1d452ec, branch: feature/phase4-optimization
+2026-04-27 12:42:47 | INFO     | DF | Loading model settings of DeepFilterNet3
+2026-04-27 12:42:47 | INFO     | DF | Using DeepFilterNet3 model at C:\Users\Luciano Muratore\AppData\Local\DeepFilterNet\DeepFilterNet\Cache\DeepFilterNet3
+2026-04-27 12:42:47 | INFO     | DF | Initializing model `deepfilternet3`
+2026-04-27 12:42:47 | INFO     | DF | Found checkpoint C:\Users\Luciano Muratore\AppData\Local\DeepFilterNet\DeepFilterNet\Cache\DeepFilterNet3\checkpoints\model_120.ckpt.best with epoch 120
+2026-04-27 12:42:48 | INFO     | DF | Running on device cpu
+2026-04-27 12:42:48 | INFO     | DF | Model loaded

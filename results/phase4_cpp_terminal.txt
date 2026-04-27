@@ -1,0 +1,57 @@
+=== Noise Cancellation - Phase 4: Async Pipeline ===
+
+Connecting to Python server...
+Connected!
+
+
+=== Available Audio Devices ===
+[0] Microsoft Sound Mapper - Input | IN: 2 | OUT: 0 | SR: 44100
+[1] Headset (WH-CH720N Hands-Free A | IN: 1 | OUT: 0 | SR: 44100
+[2] Microsoft Sound Mapper - Output | IN: 0 | OUT: 2 | SR: 44100
+[3] Headphones (WH-CH720N Stereo) | IN: 0 | OUT: 2 | SR: 44100
+[4] Headset (WH-CH720N Hands-Free A | IN: 0 | OUT: 1 | SR: 44100
+[5] Luidsprekers / koptelefoons (Re | IN: 0 | OUT: 6 | SR: 44100
+[6] Primary Sound Capture Driver | IN: 2 | OUT: 0 | SR: 44100
+[7] Headset (WH-CH720N Hands-Free AG Audio) | IN: 1 | OUT: 0 | SR: 44100
+[8] Primary Sound Driver | IN: 0 | OUT: 2 | SR: 44100
+[9] Headphones (WH-CH720N Stereo) | IN: 0 | OUT: 2 | SR: 44100
+[10] Headset (WH-CH720N Hands-Free AG Audio) | IN: 0 | OUT: 1 | SR: 44100
+[11] Luidsprekers / koptelefoons (Realtek Audio) | IN: 0 | OUT: 6 | SR: 44100
+[12] Realtek ASIO | IN: 2 | OUT: 2 | SR: 44100
+[13] Headphones (WH-CH720N Stereo) | IN: 0 | OUT: 2 | SR: 44100
+[14] Headset (WH-CH720N Hands-Free AG Audio) | IN: 0 | OUT: 1 | SR: 16000
+[15] Luidsprekers / koptelefoons (Realtek Audio) | IN: 0 | OUT: 2 | SR: 48000
+[16] Headset (WH-CH720N Hands-Free AG Audio) | IN: 1 | OUT: 0 | SR: 16000
+[17] Speakers 1 (Realtek HD Audio output with SST) | IN: 0 | OUT: 2 | SR: 44100
+[18] Speakers 2 (Realtek HD Audio output with SST) | IN: 0 | OUT: 6 | SR: 44100
+[19] PC Speaker (Realtek HD Audio output with SST) | IN: 2 | OUT: 0 | SR: 48000
+[20] Stereo Mix (Realtek HD Audio Stereo input) | IN: 2 | OUT: 0 | SR: 48000
+[21] Microphone (Realtek HD Audio Mic input) | IN: 2 | OUT: 0 | SR: 44100
+[22] Headset (@System32\drivers\bthhfenum.sys,#2;%1 Hands-Free AG Audio%0
+
+;(WH-CH720N)) | IN: 0 | OUT: 1 | SR: 16000
+[23] Headset (@System32\drivers\bthhfenum.sys,#2;%1 Hands-Free AG Audio%0
+
+;(WH-CH720N)) | IN: 1 | OUT: 0 | SR: 16000
+[24] Headphones () | IN: 0 | OUT: 2 | SR: 44100
+Default Input:  1
+Default Output: 3
+================================
+
+Using MME default devices:
+  Input:  [1] Headset (WH-CH720N Hands-Free A
+  Output: [3] Headphones (WH-CH720N Stereo)
+  Sample Rate: 44100 Hz
+
+Format supported!
+
+Audio stream started!
+  Sample Rate:  44100 Hz
+  Buffer Size:  1536 frames
+  Latency:      34.8299 ms
+
+Speak into your mic - noise will be cancelled!
+Press ENTER to stop...
+
+
+

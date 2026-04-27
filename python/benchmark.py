@@ -17,7 +17,7 @@ def benchmark_deepfilternet():
     print(f"Chunks to test:   {NUM_CHUNKS}")
     print(f"Frames per chunk: {FRAMES}")
     print(f"Buffer period:    {FRAMES / SAMPLE_RATE_HW * 1000:.1f}ms")
-    print(f"(audio must be processed faster than buffer period)\n")
+    print("(audio must be processed faster than buffer period)\n")
 
     # 1. Load model
     print("Loading model...")
@@ -69,12 +69,12 @@ def benchmark_deepfilternet():
     print(f"Min inference:          {min_ms:.1f}ms")
     print(f"Max inference:          {max_ms:.1f}ms")
     print(f"Std deviation:          {std_ms:.1f}ms")
-    print(f"")
+    print("")
     if avg_ms < budget:
-        print(f"✅ Fast enough for real-time! ({avg_ms:.1f}ms < {budget:.1f}ms)")
+        print(f"PASS: Fast enough for real-time! ({avg_ms:.1f}ms < {budget:.1f}ms)")
     else:
-        print(f"❌ Too slow for real-time ({avg_ms:.1f}ms > {budget:.1f}ms)")
-        print(f"   Need to be {avg_ms - budget:.1f}ms faster")
+        print(f"FAIL: Too slow for real-time ({avg_ms:.1f}ms > {budget:.1f}ms)")
+        print(f"      Need to be {avg_ms - budget:.1f}ms faster")
 
 if __name__ == "__main__":
     benchmark_deepfilternet()

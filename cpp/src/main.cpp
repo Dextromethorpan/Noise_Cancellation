@@ -4,6 +4,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstring>
+#include <string>
 #include <portaudio.h>
 #include <zmq.hpp>
 
@@ -15,11 +16,12 @@ constexpr int FRAMES       = 1536;
 constexpr int NUM_CHANNELS = 1;
 
 // -----------------------------------------------
-// Device Selection
-// Change these to switch audio devices
+// Device Selection — search by name
+// Change these strings to switch devices
+// without worrying about index numbers
 // -----------------------------------------------
-constexpr int INPUT_DEVICE  = 21; // Microphone (Realtek HD Audio Mic input) 44100 Hz
-constexpr int OUTPUT_DEVICE = 3;  // Headphones (WH-CH720N Stereo) 44100 Hz
+const std::string INPUT_DEVICE_NAME  = "Microphone (Realtek HD Audio Mic input)";
+const std::string OUTPUT_DEVICE_NAME = "Headphones";
 
 // -----------------------------------------------
 // Shared state between callback and main thread
@@ -34,6 +36,25 @@ struct AudioState {
         outputBuffer.resize(FRAMES, 0.0f);
     }
 };
+
+// -----------------------------------------------
+// Find device index by partial name match
+// needsInput = true  → look for input device
+// needsInput = false → look for output device
+// Returns -1 if not found
+// -----------------------------------------------
+int findDevice(const std::string& name, bool needsInput) {
+    int deviceCount = Pa_GetDeviceCount();
+    for (int i = 0; i < deviceCount; ++i) {
+        const PaDeviceInfo* info = Pa_GetDeviceInfo(i);
+        std::string deviceName(info->name);
+        if (deviceName.find(name) != std::string::npos) {
+            if (needsInput  && info->maxInputChannels  > 0) return i;
+            if (!needsInput && info->maxOutputChannels > 0) return i;
+        }
+    }
+    return -1;
+}
 
 // -----------------------------------------------
 // PortAudio Callback
@@ -124,38 +145,44 @@ int main() {
 
     listAudioDevices();
 
-    // 3. Verify selected devices exist
-    int deviceCount = Pa_GetDeviceCount();
-    if (INPUT_DEVICE >= deviceCount || OUTPUT_DEVICE >= deviceCount) {
-        std::cerr << "Invalid device index!\n";
-        std::cerr << "INPUT_DEVICE="  << INPUT_DEVICE
-                  << " OUTPUT_DEVICE=" << OUTPUT_DEVICE
-                  << " Total devices=" << deviceCount << "\n";
+    // 3. Find devices by name — immune to index reshuffling
+    int inputDevice  = findDevice(INPUT_DEVICE_NAME,  true);
+    int outputDevice = findDevice(OUTPUT_DEVICE_NAME, false);
+
+    if (inputDevice < 0) {
+        std::cerr << "Input device not found: " << INPUT_DEVICE_NAME << "\n";
+        std::cerr << "Check the device list above and update INPUT_DEVICE_NAME\n";
+        Pa_Terminate();
+        return 1;
+    }
+    if (outputDevice < 0) {
+        std::cerr << "Output device not found: " << OUTPUT_DEVICE_NAME << "\n";
+        std::cerr << "Check the device list above and update OUTPUT_DEVICE_NAME\n";
         Pa_Terminate();
         return 1;
     }
 
     // 4. Configure input (Realtek mic)
     PaStreamParameters inputParams;
-    inputParams.device                    = INPUT_DEVICE;
+    inputParams.device                    = inputDevice;
     inputParams.channelCount              = NUM_CHANNELS;
     inputParams.sampleFormat              = paFloat32;
-    inputParams.suggestedLatency          = Pa_GetDeviceInfo(INPUT_DEVICE)->defaultLowInputLatency;
+    inputParams.suggestedLatency          = Pa_GetDeviceInfo(inputDevice)->defaultLowInputLatency;
     inputParams.hostApiSpecificStreamInfo = nullptr;
 
-    // 5. Configure output (WH-CH720N Stereo headphones)
+    // 5. Configure output (headphones)
     PaStreamParameters outputParams;
-    outputParams.device                    = OUTPUT_DEVICE;
+    outputParams.device                    = outputDevice;
     outputParams.channelCount              = NUM_CHANNELS;
     outputParams.sampleFormat              = paFloat32;
-    outputParams.suggestedLatency          = Pa_GetDeviceInfo(OUTPUT_DEVICE)->defaultLowOutputLatency;
+    outputParams.suggestedLatency          = Pa_GetDeviceInfo(outputDevice)->defaultLowOutputLatency;
     outputParams.hostApiSpecificStreamInfo = nullptr;
 
     std::cout << "Using devices:\n";
-    std::cout << "  Input:  [" << INPUT_DEVICE  << "] "
-              << Pa_GetDeviceInfo(INPUT_DEVICE)->name  << "\n";
-    std::cout << "  Output: [" << OUTPUT_DEVICE << "] "
-              << Pa_GetDeviceInfo(OUTPUT_DEVICE)->name << "\n";
+    std::cout << "  Input:  [" << inputDevice  << "] "
+              << Pa_GetDeviceInfo(inputDevice)->name  << "\n";
+    std::cout << "  Output: [" << outputDevice << "] "
+              << Pa_GetDeviceInfo(outputDevice)->name << "\n";
     std::cout << "  Sample Rate: " << SAMPLE_RATE << " Hz\n\n";
 
     // 6. Verify format is supported
@@ -164,7 +191,7 @@ int main() {
     if (supported != paFormatIsSupported) {
         std::cerr << "Format not supported: "
                   << Pa_GetErrorText(supported) << "\n";
-        std::cerr << "Try changing INPUT_DEVICE or OUTPUT_DEVICE\n";
+        std::cerr << "Try changing INPUT_DEVICE_NAME or OUTPUT_DEVICE_NAME\n";
         Pa_Terminate();
         return 1;
     }

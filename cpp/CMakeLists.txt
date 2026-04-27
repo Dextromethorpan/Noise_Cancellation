@@ -1,32 +1,24 @@
-cmake_minimum_required(VERSION 3.20)
-project(NoiseCancellation)
+# -----------------------------------------------
+# Passthrough 1536 test — with ZeroMQ
+# Tests correct buffer size for Python AI
+# -----------------------------------------------
+add_executable(Passthrough1536 src/passthrough_1536.cpp)
 
-set(CMAKE_CXX_STANDARD 17)
-
-# PortAudio paths
-set(PORTAUDIO_ROOT "C:/dev/portaudio")
-
-# ZeroMQ paths
-set(ZEROMQ_ROOT "C:/dev/zeromq")
-
-add_executable(NoiseCancellation src/main.cpp)
-
-target_include_directories(NoiseCancellation PRIVATE
+target_include_directories(Passthrough1536 PRIVATE
     ${PORTAUDIO_ROOT}/include
     ${ZEROMQ_ROOT}/include
 )
 
-target_link_libraries(NoiseCancellation PRIVATE
+target_link_libraries(Passthrough1536 PRIVATE
     ${PORTAUDIO_ROOT}/lib/portaudio.lib
     ${ZEROMQ_ROOT}/lib/libzmq-v143-mt-4_3_5.lib
 )
 
-# Copy DLLs next to the executable after build
-add_custom_command(TARGET NoiseCancellation POST_BUILD
+add_custom_command(TARGET Passthrough1536 POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${PORTAUDIO_ROOT}/portaudio.dll"
-        $<TARGET_FILE_DIR:NoiseCancellation>
+        $<TARGET_FILE_DIR:Passthrough1536>
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${ZEROMQ_ROOT}/bin/libzmq-v143-mt-4_3_5.dll"
-        $<TARGET_FILE_DIR:NoiseCancellation>
+        $<TARGET_FILE_DIR:Passthrough1536>
 )

@@ -1,182 +1,259 @@
-import zmq
-import numpy as np
-import torch
-import torchaudio.transforms as T
-from df.enhance import init_df, enhance
-import threading
-import queue
-import time
+#include <iostream>
+#include <vector>
+#include <thread>
+#include <atomic>
+#include <chrono>
+#include <cstring>
+#include <portaudio.h>
+#include <zmq.hpp>
 
-# -----------------------------------------------
-# Configuration
-# -----------------------------------------------
-SAMPLE_RATE_HW    = 44100
-SAMPLE_RATE_MODEL = 48000
-FRAMES            = 1536
-QUEUE_SIZE        = 10  # max chunks buffered in queue
+// -----------------------------------------------
+// Configuration
+// -----------------------------------------------
+constexpr int SAMPLE_RATE  = 44100;
+constexpr int FRAMES       = 1536;
+constexpr int NUM_CHANNELS = 1;
 
-# -----------------------------------------------
-# Shared queues between receiver and sender
-# -----------------------------------------------
-input_queue  = queue.Queue(maxsize=QUEUE_SIZE)
-output_queue = queue.Queue(maxsize=QUEUE_SIZE)
+// -----------------------------------------------
+// Shared state between callback and main thread
+// -----------------------------------------------
+struct AudioState {
+    std::vector<float> inputBuffer;
+    std::vector<float> outputBuffer;
+    bool cleanReady = false;
 
-def load_model():
-    """Load DeepFilterNet once at startup."""
-    print("Loading DeepFilterNet model...")
-    model, df_state, _ = init_df()
-    print("Model loaded!")
-    return model, df_state
+    AudioState() {
+        inputBuffer.resize(FRAMES, 0.0f);
+        outputBuffer.resize(FRAMES, 0.0f);
+    }
+};
 
-def process_chunk(audio_chunk: np.ndarray, model, df_state,
-                  resampler_up, resampler_down) -> np.ndarray:
-    """
-    Full denoise pipeline.
-    44100 Hz in → DeepFilterNet → 44100 Hz out
-    """
-    audio_tensor = torch.from_numpy(audio_chunk).unsqueeze(0)
-    audio_48k    = resampler_up(audio_tensor)
-    enhanced_48k = enhance(model, df_state, audio_48k)
-    enhanced_44k = resampler_down(enhanced_48k)
+// -----------------------------------------------
+// PortAudio Callback
+// -----------------------------------------------
+static int audioCallback(
+    const void* inputBuffer,
+    void* outputBuffer,
+    unsigned long framesPerBuffer,
+    const PaStreamCallbackTimeInfo* timeInfo,
+    PaStreamCallbackFlags statusFlags,
+    void* userData)
+{
+    auto* state = static_cast<AudioState*>(userData);
+    const float* in  = static_cast<const float*>(inputBuffer);
+    float*       out = static_cast<float*>(outputBuffer);
 
-    # Trim or pad to match original length
-    target      = audio_chunk.shape[0]
-    result      = enhanced_44k.squeeze(0).numpy()
-    if len(result) > target:
-        result = result[:target]
-    elif len(result) < target:
-        result = np.pad(result, (0, target - len(result)))
-    return result
+    if (inputBuffer != nullptr) {
+        for (unsigned long i = 0; i < framesPerBuffer; ++i)
+            state->inputBuffer[i] = in[i];
+    }
 
-def receiver_thread(pull_socket):
-    """
-    Continuously receives noisy audio chunks from C++
-    and puts them in the input queue.
-    Runs on its own thread — never blocks the processor.
-    """
-    print("Receiver thread started.")
-    while True:
-        message     = pull_socket.recv()
-        noisy_chunk = np.frombuffer(message, dtype=np.float32).copy()
-        try:
-            input_queue.put_nowait(noisy_chunk)
-        except queue.Full:
-            # If queue is full drop the oldest chunk
-            # and add the new one
-            try:
-                input_queue.get_nowait()
-            except queue.Empty:
-                pass
-            input_queue.put_nowait(noisy_chunk)
+    if (state->cleanReady) {
+        for (unsigned long i = 0; i < framesPerBuffer; ++i)
+            out[i] = state->outputBuffer[i];
+    } else {
+        // Passthrough until first clean chunk arrives
+        if (inputBuffer != nullptr) {
+            for (unsigned long i = 0; i < framesPerBuffer; ++i)
+                out[i] = in[i];
+        } else {
+            for (unsigned long i = 0; i < framesPerBuffer; ++i)
+                out[i] = 0.0f;
+        }
+    }
 
-def processor_thread(model, df_state, resampler_up, resampler_down):
-    """
-    Continuously takes noisy chunks from input queue,
-    processes them, and puts clean chunks in output queue.
-    Runs on its own thread.
-    """
-    print("Processor thread started.")
-    chunk_count = 0
+    return paContinue;
+}
 
-    while True:
-        # Wait for a chunk to process
-        noisy_chunk = input_queue.get()
+// -----------------------------------------------
+// List all available audio devices
+// -----------------------------------------------
+void listAudioDevices() {
+    int deviceCount = Pa_GetDeviceCount();
+    std::cout << "\n=== Available Audio Devices ===\n";
+    for (int i = 0; i < deviceCount; ++i) {
+        const PaDeviceInfo* info = Pa_GetDeviceInfo(i);
+        std::cout << "[" << i << "] " << info->name
+                  << " | IN: "  << info->maxInputChannels
+                  << " | OUT: " << info->maxOutputChannels
+                  << " | SR: "  << info->defaultSampleRate
+                  << "\n";
+    }
+    std::cout << "Default Input:  " << Pa_GetDefaultInputDevice() << "\n";
+    std::cout << "Default Output: " << Pa_GetDefaultOutputDevice() << "\n";
+    std::cout << "================================\n\n";
+}
 
-        # Process with DeepFilterNet
-        clean_chunk = process_chunk(
-            noisy_chunk, model, df_state,
-            resampler_up, resampler_down)
+// -----------------------------------------------
+// Main
+// -----------------------------------------------
+int main() {
+    std::cout << "=== Noise Cancellation - Phase 4: Async Pipeline ===\n\n";
 
-        # Put clean chunk in output queue
-        try:
-            output_queue.put_nowait(clean_chunk)
-        except queue.Full:
-            # Drop oldest clean chunk if queue is full
-            try:
-                output_queue.get_nowait()
-            except queue.Empty:
-                pass
-            output_queue.put_nowait(clean_chunk)
+    // 1. Initialize ZeroMQ with PUSH/PULL pattern
+    std::cout << "Connecting to Python server...\n";
+    zmq::context_t zmqContext(1);
 
-        chunk_count += 1
-        if chunk_count % 50 == 0:
-            print(f"Processed {chunk_count} chunks "
-                  f"({chunk_count * FRAMES / SAMPLE_RATE_HW:.1f}s) "
-                  f"| Queue: in={input_queue.qsize()} "
-                  f"out={output_queue.qsize()}")
+    // Push noisy audio TO Python
+    zmq::socket_t pushSocket(zmqContext, zmq::socket_type::push);
+    pushSocket.connect("tcp://127.0.0.1:5555");
 
-def sender_thread(push_socket):
-    """
-    Continuously takes clean chunks from output queue
-    and sends them back to C++.
-    Runs on its own thread.
-    """
-    print("Sender thread started.")
-    while True:
-        # Wait for a clean chunk
-        clean_chunk = output_queue.get()
+    // Pull clean audio FROM Python
+    zmq::socket_t pullSocket(zmqContext, zmq::socket_type::pull);
+    pullSocket.connect("tcp://127.0.0.1:5556");
 
-        # Send back to C++
-        push_socket.send(clean_chunk.astype(np.float32).tobytes())
+    std::cout << "Connected!\n\n";
 
-def run_server():
-    """
-    Async server — three threads working in parallel:
-    1. Receiver  — pulls noisy audio from C++
-    2. Processor — runs DeepFilterNet
-    3. Sender    — pushes clean audio to C++
-    """
+    // 2. Initialize PortAudio
+    PaError err = Pa_Initialize();
+    if (err != paNoError) {
+        std::cerr << "PortAudio init failed: " << Pa_GetErrorText(err) << "\n";
+        return 1;
+    }
 
-    # 1. Load model and resamplers
-    model, df_state = load_model()
-    resampler_up    = T.Resample(SAMPLE_RATE_HW, SAMPLE_RATE_MODEL)
-    resampler_down  = T.Resample(SAMPLE_RATE_MODEL, SAMPLE_RATE_HW)
+    listAudioDevices();
 
-    # 2. Set up ZeroMQ PUSH/PULL sockets
-    context     = zmq.Context()
+    // 3. Use MME default devices
+    PaDeviceIndex inputDevice  = Pa_GetDefaultInputDevice();
+    PaDeviceIndex outputDevice = Pa_GetDefaultOutputDevice();
 
-    # C++ pushes noisy audio → Python pulls here
-    pull_socket = context.socket(zmq.PULL)
-    pull_socket.bind("tcp://127.0.0.1:5555")
+    // 4. Configure input
+    PaStreamParameters inputParams;
+    inputParams.device                    = inputDevice;
+    inputParams.channelCount              = NUM_CHANNELS;
+    inputParams.sampleFormat              = paFloat32;
+    inputParams.suggestedLatency          = Pa_GetDeviceInfo(inputDevice)->defaultLowInputLatency;
+    inputParams.hostApiSpecificStreamInfo = nullptr;
 
-    # Python pushes clean audio → C++ pulls here
-    push_socket = context.socket(zmq.PUSH)
-    push_socket.bind("tcp://127.0.0.1:5556")
+    // 5. Configure output
+    PaStreamParameters outputParams;
+    outputParams.device                    = outputDevice;
+    outputParams.channelCount              = NUM_CHANNELS;
+    outputParams.sampleFormat              = paFloat32;
+    outputParams.suggestedLatency          = Pa_GetDeviceInfo(outputDevice)->defaultLowOutputLatency;
+    outputParams.hostApiSpecificStreamInfo = nullptr;
 
-    print("Async server listening:")
-    print("  PULL noisy audio on tcp://127.0.0.1:5555")
-    print("  PUSH clean audio on tcp://127.0.0.1:5556")
-    print("Waiting for audio chunks from C++...\n")
+    std::cout << "Using MME default devices:\n";
+    std::cout << "  Input:  [" << inputDevice  << "] "
+              << Pa_GetDeviceInfo(inputDevice)->name  << "\n";
+    std::cout << "  Output: [" << outputDevice << "] "
+              << Pa_GetDeviceInfo(outputDevice)->name << "\n";
+    std::cout << "  Sample Rate: " << SAMPLE_RATE << " Hz\n\n";
 
-    # 3. Start all three threads
-    t1 = threading.Thread(
-        target=receiver_thread,
-        args=(pull_socket,),
-        daemon=True)
+    // 6. Verify format
+    PaError supported = Pa_IsFormatSupported(
+        &inputParams, &outputParams, SAMPLE_RATE);
+    if (supported != paFormatIsSupported) {
+        std::cerr << "Format not supported: "
+                  << Pa_GetErrorText(supported) << "\n";
+        Pa_Terminate();
+        return 1;
+    }
+    std::cout << "Format supported!\n\n";
 
-    t2 = threading.Thread(
-        target=processor_thread,
-        args=(model, df_state, resampler_up, resampler_down),
-        daemon=True)
+    // 7. Open stream
+    AudioState state;
+    PaStream*  stream;
 
-    t3 = threading.Thread(
-        target=sender_thread,
-        args=(push_socket,),
-        daemon=True)
+    err = Pa_OpenStream(
+        &stream,
+        &inputParams,
+        &outputParams,
+        SAMPLE_RATE,
+        FRAMES,
+        paClipOff,
+        audioCallback,
+        &state
+    );
 
-    t1.start()
-    t2.start()
-    t3.start()
+    if (err != paNoError) {
+        std::cerr << "Failed to open stream: " << Pa_GetErrorText(err) << "\n";
+        Pa_Terminate();
+        return 1;
+    }
 
-    print("All threads running!")
-    print("Press Ctrl+C to stop.\n")
+    // 8. Start stream
+    err = Pa_StartStream(stream);
+    if (err != paNoError) {
+        std::cerr << "Failed to start stream: " << Pa_GetErrorText(err) << "\n";
+        Pa_Terminate();
+        return 1;
+    }
 
-    # 4. Main thread just keeps the process alive
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print("\nServer stopped.")
+    std::cout << "Audio stream started!\n";
+    std::cout << "  Sample Rate:  " << SAMPLE_RATE << " Hz\n";
+    std::cout << "  Buffer Size:  " << FRAMES << " frames\n";
+    std::cout << "  Latency:      "
+              << (FRAMES * 1000.0 / SAMPLE_RATE) << " ms\n\n";
+    std::cout << "Speak into your mic - noise will be cancelled!\n";
+    std::cout << "Press ENTER to stop...\n\n";
 
-if __name__ == "__main__":
-    run_server()
+    // 9. Sender thread — pushes mic audio to Python
+    //    Runs independently, never waits for reply
+    std::atomic<bool> running(true);
+    int sentCount = 0;
+
+    std::thread senderThread([&]() {
+        while (running) {
+            zmq::message_t msg(
+                state.inputBuffer.data(),
+                state.inputBuffer.size() * sizeof(float));
+            pushSocket.send(msg, zmq::send_flags::none);
+            sentCount++;
+
+            // Small sleep to match audio buffer period
+            std::this_thread::sleep_for(
+                std::chrono::milliseconds(
+                    FRAMES * 1000 / SAMPLE_RATE));
+        }
+    });
+
+    // 10. Receiver thread — pulls clean audio from Python
+    //     Runs independently, updates output buffer whenever
+    //     clean audio is available
+    int receivedCount = 0;
+
+    std::thread receiverThread([&]() {
+        while (running) {
+            zmq::message_t reply;
+
+            // Non-blocking receive — don't wait if nothing ready
+            auto result = pullSocket.recv(
+                reply, zmq::recv_flags::dontwait);
+
+            if (result) {
+                memcpy(state.outputBuffer.data(),
+                       reply.data(),
+                       FRAMES * sizeof(float));
+                state.cleanReady = true;
+                receivedCount++;
+
+                if (receivedCount % 50 == 0) {
+                    std::cout << "Received " << receivedCount
+                              << " clean chunks ("
+                              << (receivedCount * FRAMES / (float)SAMPLE_RATE)
+                              << " seconds)\n";
+                }
+            }
+
+            // Small sleep to avoid hammering the socket
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+    });
+
+    // 11. Wait for ENTER
+    std::cin.get();
+    running = false;
+    senderThread.join();
+    receiverThread.join();
+
+    // 12. Clean up
+    Pa_StopStream(stream);
+    Pa_CloseStream(stream);
+    Pa_Terminate();
+
+    std::cout << "\nSent:     " << sentCount     << " chunks\n";
+    std::cout << "Received: " << receivedCount  << " chunks\n";
+    std::cout << "Stream stopped. Phase 4 complete!\n";
+    return 0;
+}

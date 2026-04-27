@@ -15,6 +15,13 @@ constexpr int FRAMES       = 1536;
 constexpr int NUM_CHANNELS = 1;
 
 // -----------------------------------------------
+// Device Selection
+// Change these to switch audio devices
+// -----------------------------------------------
+constexpr int INPUT_DEVICE  = 21; // Microphone (Realtek HD Audio Mic input) 44100 Hz
+constexpr int OUTPUT_DEVICE = 3;  // Headphones (WH-CH720N Stereo) 44100 Hz
+
+// -----------------------------------------------
 // Shared state between callback and main thread
 // -----------------------------------------------
 struct AudioState {
@@ -30,6 +37,8 @@ struct AudioState {
 
 // -----------------------------------------------
 // PortAudio Callback
+// Runs on high-priority audio thread
+// IMPORTANT: No memory allocation or I/O here!
 // -----------------------------------------------
 static int audioCallback(
     const void* inputBuffer,
@@ -43,16 +52,18 @@ static int audioCallback(
     const float* in  = static_cast<const float*>(inputBuffer);
     float*       out = static_cast<float*>(outputBuffer);
 
+    // Copy mic input into shared state
     if (inputBuffer != nullptr) {
         for (unsigned long i = 0; i < framesPerBuffer; ++i)
             state->inputBuffer[i] = in[i];
     }
 
+    // Play clean audio if ready
+    // Fall back to passthrough until first clean chunk arrives
     if (state->cleanReady) {
         for (unsigned long i = 0; i < framesPerBuffer; ++i)
             out[i] = state->outputBuffer[i];
     } else {
-        // Passthrough until first clean chunk arrives
         if (inputBuffer != nullptr) {
             for (unsigned long i = 0; i < framesPerBuffer; ++i)
                 out[i] = in[i];
@@ -90,7 +101,7 @@ void listAudioDevices() {
 int main() {
     std::cout << "=== Noise Cancellation - Phase 4: Async Pipeline ===\n\n";
 
-    // 1. Initialize ZeroMQ with PUSH/PULL pattern
+    // 1. Initialize ZeroMQ PUSH/PULL sockets
     std::cout << "Connecting to Python server...\n";
     zmq::context_t zmqContext(1);
 
@@ -113,45 +124,53 @@ int main() {
 
     listAudioDevices();
 
-    // 3. Use MME default devices
-    PaDeviceIndex inputDevice  = Pa_GetDefaultInputDevice();
-    PaDeviceIndex outputDevice = Pa_GetDefaultOutputDevice();
+    // 3. Verify selected devices exist
+    int deviceCount = Pa_GetDeviceCount();
+    if (INPUT_DEVICE >= deviceCount || OUTPUT_DEVICE >= deviceCount) {
+        std::cerr << "Invalid device index!\n";
+        std::cerr << "INPUT_DEVICE="  << INPUT_DEVICE
+                  << " OUTPUT_DEVICE=" << OUTPUT_DEVICE
+                  << " Total devices=" << deviceCount << "\n";
+        Pa_Terminate();
+        return 1;
+    }
 
-    // 4. Configure input
+    // 4. Configure input (Realtek mic)
     PaStreamParameters inputParams;
-    inputParams.device                    = inputDevice;
+    inputParams.device                    = INPUT_DEVICE;
     inputParams.channelCount              = NUM_CHANNELS;
     inputParams.sampleFormat              = paFloat32;
-    inputParams.suggestedLatency          = Pa_GetDeviceInfo(inputDevice)->defaultLowInputLatency;
+    inputParams.suggestedLatency          = Pa_GetDeviceInfo(INPUT_DEVICE)->defaultLowInputLatency;
     inputParams.hostApiSpecificStreamInfo = nullptr;
 
-    // 5. Configure output
+    // 5. Configure output (WH-CH720N Stereo headphones)
     PaStreamParameters outputParams;
-    outputParams.device                    = outputDevice;
+    outputParams.device                    = OUTPUT_DEVICE;
     outputParams.channelCount              = NUM_CHANNELS;
     outputParams.sampleFormat              = paFloat32;
-    outputParams.suggestedLatency          = Pa_GetDeviceInfo(outputDevice)->defaultLowOutputLatency;
+    outputParams.suggestedLatency          = Pa_GetDeviceInfo(OUTPUT_DEVICE)->defaultLowOutputLatency;
     outputParams.hostApiSpecificStreamInfo = nullptr;
 
-    std::cout << "Using MME default devices:\n";
-    std::cout << "  Input:  [" << inputDevice  << "] "
-              << Pa_GetDeviceInfo(inputDevice)->name  << "\n";
-    std::cout << "  Output: [" << outputDevice << "] "
-              << Pa_GetDeviceInfo(outputDevice)->name << "\n";
+    std::cout << "Using devices:\n";
+    std::cout << "  Input:  [" << INPUT_DEVICE  << "] "
+              << Pa_GetDeviceInfo(INPUT_DEVICE)->name  << "\n";
+    std::cout << "  Output: [" << OUTPUT_DEVICE << "] "
+              << Pa_GetDeviceInfo(OUTPUT_DEVICE)->name << "\n";
     std::cout << "  Sample Rate: " << SAMPLE_RATE << " Hz\n\n";
 
-    // 6. Verify format
+    // 6. Verify format is supported
     PaError supported = Pa_IsFormatSupported(
         &inputParams, &outputParams, SAMPLE_RATE);
     if (supported != paFormatIsSupported) {
         std::cerr << "Format not supported: "
                   << Pa_GetErrorText(supported) << "\n";
+        std::cerr << "Try changing INPUT_DEVICE or OUTPUT_DEVICE\n";
         Pa_Terminate();
         return 1;
     }
     std::cout << "Format supported!\n\n";
 
-    // 7. Open stream
+    // 7. Open the stream
     AudioState state;
     PaStream*  stream;
 
@@ -172,7 +191,7 @@ int main() {
         return 1;
     }
 
-    // 8. Start stream
+    // 8. Start the stream
     err = Pa_StartStream(stream);
     if (err != paNoError) {
         std::cerr << "Failed to start stream: " << Pa_GetErrorText(err) << "\n";
@@ -185,11 +204,11 @@ int main() {
     std::cout << "  Buffer Size:  " << FRAMES << " frames\n";
     std::cout << "  Latency:      "
               << (FRAMES * 1000.0 / SAMPLE_RATE) << " ms\n\n";
-    std::cout << "Speak into your mic - noise will be cancelled!\n";
+    std::cout << "Speak into your laptop mic - noise will be cancelled!\n";
     std::cout << "Press ENTER to stop...\n\n";
 
-    // 9. Sender thread — pushes mic audio to Python
-    //    Runs independently, never waits for reply
+    // 9. Sender thread — pushes mic audio to Python continuously
+    //    Does not wait for reply — fully async
     std::atomic<bool> running(true);
     int sentCount = 0;
 
@@ -201,7 +220,7 @@ int main() {
             pushSocket.send(msg, zmq::send_flags::none);
             sentCount++;
 
-            // Small sleep to match audio buffer period
+            // Sleep to match audio buffer period
             std::this_thread::sleep_for(
                 std::chrono::milliseconds(
                     FRAMES * 1000 / SAMPLE_RATE));
@@ -209,15 +228,15 @@ int main() {
     });
 
     // 10. Receiver thread — pulls clean audio from Python
-    //     Runs independently, updates output buffer whenever
-    //     clean audio is available
+    //     Updates output buffer whenever clean audio is available
+    //     Never blocks the audio callback
     int receivedCount = 0;
 
     std::thread receiverThread([&]() {
         while (running) {
             zmq::message_t reply;
 
-            // Non-blocking receive — don't wait if nothing ready
+            // Non-blocking receive
             auto result = pullSocket.recv(
                 reply, zmq::recv_flags::dontwait);
 
@@ -252,8 +271,8 @@ int main() {
     Pa_CloseStream(stream);
     Pa_Terminate();
 
-    std::cout << "\nSent:     " << sentCount     << " chunks\n";
-    std::cout << "Received: " << receivedCount  << " chunks\n";
+    std::cout << "\nSent:     " << sentCount    << " chunks\n";
+    std::cout << "Received: " << receivedCount << " chunks\n";
     std::cout << "Stream stopped. Phase 4 complete!\n";
     return 0;
 }

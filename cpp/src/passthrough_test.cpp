@@ -6,9 +6,10 @@
 // -----------------------------------------------
 // Configuration
 // -----------------------------------------------
-constexpr int SAMPLE_RATE  = 44100;
-constexpr int FRAMES       = 1536;
-constexpr int NUM_CHANNELS = 1;
+constexpr int SAMPLE_RATE     = 44100;
+constexpr int FRAMES          = 1536;
+constexpr int INPUT_CHANNELS  = 1; // mic is mono
+constexpr int OUTPUT_CHANNELS = 2; // output is stereo
 
 // -----------------------------------------------
 // Device Selection
@@ -37,9 +38,8 @@ int findDevice(const std::string& name, bool needsInput) {
 
 // -----------------------------------------------
 // PortAudio Callback
-// Pure passthrough — input goes directly to output
-// No shared state, no threads, no ZeroMQ
-// This is the simplest possible audio pipeline
+// Mono input → Stereo output
+// Duplicates mono mic signal to both ears
 // -----------------------------------------------
 static int audioCallback(
     const void* inputBuffer,
@@ -53,10 +53,12 @@ static int audioCallback(
     float*       out = static_cast<float*>(outputBuffer);
 
     if (inputBuffer != nullptr) {
-        for (unsigned long i = 0; i < framesPerBuffer; ++i)
-            out[i] = in[i];
+        for (unsigned long i = 0; i < framesPerBuffer; ++i) {
+            out[i * 2]     = in[i]; // left channel
+            out[i * 2 + 1] = in[i]; // right channel
+        }
     } else {
-        for (unsigned long i = 0; i < framesPerBuffer; ++i)
+        for (unsigned long i = 0; i < framesPerBuffer * 2; ++i)
             out[i] = 0.0f;
     }
 
@@ -86,9 +88,9 @@ void listAudioDevices() {
 // Main
 // -----------------------------------------------
 int main() {
-    std::cout << "=== Passthrough Test — Sound Mapper ===\n";
+    std::cout << "=== Passthrough Test — Mono to Stereo ===\n";
     std::cout << "Purpose: verify audio output works\n";
-    std::cout << "         using Windows Sound Mapper\n\n";
+    std::cout << "         mono mic input to stereo output\n\n";
 
     // 1. Initialize PortAudio
     PaError err = Pa_Initialize();
@@ -128,24 +130,27 @@ int main() {
               << " | API: " << inApi->name  << "\n";
     std::cout << "  Output: [" << outputDevice << "] "
               << Pa_GetDeviceInfo(outputDevice)->name
-              << " | API: " << outApi->name << "\n\n";
+              << " | API: " << outApi->name << "\n";
+    std::cout << "  Input channels:  " << INPUT_CHANNELS  << " (mono)\n";
+    std::cout << "  Output channels: " << OUTPUT_CHANNELS << " (stereo)\n\n";
 
-    // 3. Configure stream parameters
+    // 3. Configure input (mono mic)
     PaStreamParameters inputParams;
     inputParams.device                    = inputDevice;
-    inputParams.channelCount              = NUM_CHANNELS;
+    inputParams.channelCount              = INPUT_CHANNELS;
     inputParams.sampleFormat              = paFloat32;
     inputParams.suggestedLatency          = Pa_GetDeviceInfo(inputDevice)->defaultLowInputLatency;
     inputParams.hostApiSpecificStreamInfo = nullptr;
 
+    // 4. Configure output (stereo)
     PaStreamParameters outputParams;
     outputParams.device                    = outputDevice;
-    outputParams.channelCount              = NUM_CHANNELS;
+    outputParams.channelCount              = OUTPUT_CHANNELS;
     outputParams.sampleFormat              = paFloat32;
     outputParams.suggestedLatency          = Pa_GetDeviceInfo(outputDevice)->defaultLowOutputLatency;
     outputParams.hostApiSpecificStreamInfo = nullptr;
 
-    // 4. Verify format is supported
+    // 5. Verify format is supported
     PaError supported = Pa_IsFormatSupported(
         &inputParams, &outputParams, SAMPLE_RATE);
     if (supported != paFormatIsSupported) {
@@ -156,7 +161,7 @@ int main() {
     }
     std::cout << "Format supported at " << SAMPLE_RATE << " Hz!\n\n";
 
-    // 5. Open stream
+    // 6. Open stream
     PaStream* stream;
     err = Pa_OpenStream(
         &stream,
@@ -176,7 +181,7 @@ int main() {
         return 1;
     }
 
-    // 6. Start stream
+    // 7. Start stream
     err = Pa_StartStream(stream);
     if (err != paNoError) {
         std::cerr << "Failed to start stream: "
@@ -186,17 +191,17 @@ int main() {
     }
 
     std::cout << "Stream started!\n";
-    std::cout << "  Sample Rate: " << SAMPLE_RATE << " Hz\n";
-    std::cout << "  Buffer Size: " << FRAMES << " frames\n";
-    std::cout << "  Latency:     "
+    std::cout << "  Sample Rate:    " << SAMPLE_RATE << " Hz\n";
+    std::cout << "  Buffer Size:    " << FRAMES << " frames\n";
+    std::cout << "  Latency:        "
               << (FRAMES * 1000.0 / SAMPLE_RATE) << " ms\n\n";
     std::cout << "Speak into your mic.\n";
-    std::cout << "You should hear yourself in the output.\n";
+    std::cout << "You should hear yourself in BOTH ears.\n";
     std::cout << "Press ENTER to stop...\n\n";
 
     std::cin.get();
 
-    // 7. Clean up
+    // 8. Clean up
     Pa_StopStream(stream);
     Pa_CloseStream(stream);
     Pa_Terminate();

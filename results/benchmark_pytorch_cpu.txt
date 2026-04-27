@@ -1,0 +1,36 @@
+=== DeepFilterNet Benchmark ===
+Chunks to test:   50
+Frames per chunk: 1536
+Buffer period:    34.8ms
+(audio must be processed faster than buffer period)
+
+Loading model...
+2026-04-27 11:31:54 | INFO     | DF | Running on torch 2.0.1+cpu
+2026-04-27 11:31:54 | INFO     | DF | Running on host DESKTOP-R02PTCP
+2026-04-27 11:31:55 | INFO     | DF | Git commit: 29af7d2, branch: feature/phase4-optimization
+2026-04-27 11:31:55 | INFO     | DF | Loading model settings of DeepFilterNet3
+2026-04-27 11:31:55 | INFO     | DF | Using DeepFilterNet3 model at C:\Users\Luciano Muratore\AppData\Local\DeepFilterNet\DeepFilterNet\Cache\DeepFilterNet3
+2026-04-27 11:31:55 | INFO     | DF | Initializing model `deepfilternet3`
+2026-04-27 11:31:55 | INFO     | DF | Found checkpoint C:\Users\Luciano Muratore\AppData\Local\DeepFilterNet\DeepFilterNet\Cache\DeepFilterNet3\checkpoints\model_120.ckpt.best with epoch 120
+2026-04-27 11:31:55 | INFO     | DF | Running on device cpu
+2026-04-27 11:31:55 | INFO     | DF | Model loaded
+Model loaded!
+
+Warming up...
+Warm up done!
+
+Benchmarking 50 chunks...
+  Chunk  10: 24.9ms
+  Chunk  20: 24.7ms
+  Chunk  30: 31.2ms
+  Chunk  40: 21.0ms
+  Chunk  50: 21.7ms
+
+=== Results ===
+Buffer period (budget): 34.8ms
+Average inference:      25.7ms
+Min inference:          16.4ms
+Max inference:          59.3ms
+Std deviation:          7.0ms
+
+PASS: Fast enough for real-time! (25.7ms < 34.8ms)

@@ -4,23 +4,20 @@
 #include <atomic>
 #include <chrono>
 #include <cstring>
-#include <string>
 #include <portaudio.h>
 #include <zmq.hpp>
 
 // -----------------------------------------------
 // Configuration
+// Mirrors the working Python sounddevice test:
+// device=(1, 4), samplerate=44100,
+// blocksize=512, channels=1, MME shared mode
 // -----------------------------------------------
-constexpr int SAMPLE_RATE  = 44100;
-constexpr int FRAMES       = 1536;
-constexpr int NUM_CHANNELS = 1;
-
-// -----------------------------------------------
-// Device Selection — search by name
-// Change these strings to switch devices
-// -----------------------------------------------
-const std::string INPUT_DEVICE_NAME  = "Microphone (Realtek HD Audio Mic input)";
-const std::string OUTPUT_DEVICE_NAME = "Headphones";
+constexpr int SAMPLE_RATE    = 44100;
+constexpr int FRAMES         = 512;
+constexpr int CHANNELS       = 1;    // mono for BOTH input AND output
+constexpr int INPUT_DEVICE   = 1;    // Microfoon (Realtek Audio) MME
+constexpr int OUTPUT_DEVICE  = 4;    // Headphones (WH-CH720N Stereo) MME
 
 // -----------------------------------------------
 // Shared state between callback and main thread
@@ -35,26 +32,6 @@ struct AudioState {
         outputBuffer.resize(FRAMES, 0.0f);
     }
 };
-
-// -----------------------------------------------
-// Find device index by partial name match
-// hostApi = -1 means any host API
-// Returns -1 if not found
-// -----------------------------------------------
-int findDevice(const std::string& name, bool needsInput,
-               PaHostApiIndex hostApi = -1) {
-    int deviceCount = Pa_GetDeviceCount();
-    for (int i = 0; i < deviceCount; ++i) {
-        const PaDeviceInfo* info = Pa_GetDeviceInfo(i);
-        std::string deviceName(info->name);
-        if (deviceName.find(name) != std::string::npos) {
-            if (hostApi >= 0 && info->hostApi != hostApi) continue;
-            if (needsInput  && info->maxInputChannels  > 0) return i;
-            if (!needsInput && info->maxOutputChannels > 0) return i;
-        }
-    }
-    return -1;
-}
 
 // -----------------------------------------------
 // PortAudio Callback
@@ -113,7 +90,7 @@ void listAudioDevices() {
                   << " | API: " << api->name
                   << "\n";
     }
-    std::cout << "Default Input:  " << Pa_GetDefaultInputDevice() << "\n";
+    std::cout << "Default Input:  " << Pa_GetDefaultInputDevice()  << "\n";
     std::cout << "Default Output: " << Pa_GetDefaultOutputDevice() << "\n";
     std::cout << "================================\n\n";
 }
@@ -141,87 +118,59 @@ int main() {
     // 2. Initialize PortAudio
     PaError err = Pa_Initialize();
     if (err != paNoError) {
-        std::cerr << "PortAudio init failed: " << Pa_GetErrorText(err) << "\n";
+        std::cerr << "PortAudio init failed: "
+                  << Pa_GetErrorText(err) << "\n";
         return 1;
     }
 
     listAudioDevices();
 
-    // 3. Find input device by name
-    int inputDevice = findDevice(INPUT_DEVICE_NAME, true);
-    if (inputDevice < 0) {
-        std::cerr << "Input device not found: " << INPUT_DEVICE_NAME << "\n";
-        std::cerr << "Check the device list above and update INPUT_DEVICE_NAME\n";
+    // 3. Verify selected devices exist
+    int deviceCount = Pa_GetDeviceCount();
+    if (INPUT_DEVICE >= deviceCount || OUTPUT_DEVICE >= deviceCount) {
+        std::cerr << "Invalid device index!\n";
+        std::cerr << "Check device list above\n";
         Pa_Terminate();
         return 1;
     }
 
-    // 4. Get input device host API
-    //    Then search for output device on the SAME host API
-    //    This guarantees a legal combination
-    PaHostApiIndex hostApi = Pa_GetDeviceInfo(inputDevice)->hostApi;
-    std::cout << "Input device found:  [" << inputDevice << "] "
-              << Pa_GetDeviceInfo(inputDevice)->name << "\n";
-    std::cout << "Input host API:      "
-              << Pa_GetHostApiInfo(hostApi)->name << "\n\n";
+    std::cout << "Using devices:\n";
+    std::cout << "  Input:  [" << INPUT_DEVICE  << "] "
+              << Pa_GetDeviceInfo(INPUT_DEVICE)->name  << "\n";
+    std::cout << "  Output: [" << OUTPUT_DEVICE << "] "
+              << Pa_GetDeviceInfo(OUTPUT_DEVICE)->name << "\n";
+    std::cout << "  Channels:    " << CHANNELS    << " (mono)\n";
+    std::cout << "  Sample Rate: " << SAMPLE_RATE << " Hz\n";
+    std::cout << "  Buffer Size: " << FRAMES      << " frames\n\n";
 
-    // 5. Find output device on same host API first
-    int outputDevice = findDevice(OUTPUT_DEVICE_NAME, false, hostApi);
-
-    if (outputDevice < 0) {
-        // If not found on same API try any API
-        std::cout << "Output device not found on same API — trying any API...\n";
-        outputDevice = findDevice(OUTPUT_DEVICE_NAME, false);
-    }
-
-    if (outputDevice < 0) {
-        std::cerr << "Output device not found: " << OUTPUT_DEVICE_NAME << "\n";
-        std::cerr << "Check the device list above and update OUTPUT_DEVICE_NAME\n";
-        Pa_Terminate();
-        return 1;
-    }
-
-    std::cout << "Output device found: [" << outputDevice << "] "
-              << Pa_GetDeviceInfo(outputDevice)->name << "\n";
-    std::cout << "Output host API:     "
-              << Pa_GetHostApiInfo(Pa_GetDeviceInfo(outputDevice)->hostApi)->name
-              << "\n\n";
-
-    // 6. Configure input (Realtek mic)
+    // 4. Configure input (Realtek mic — MME)
     PaStreamParameters inputParams;
-    inputParams.device                    = inputDevice;
-    inputParams.channelCount              = NUM_CHANNELS;
+    inputParams.device                    = INPUT_DEVICE;
+    inputParams.channelCount              = CHANNELS;
     inputParams.sampleFormat              = paFloat32;
-    inputParams.suggestedLatency          = Pa_GetDeviceInfo(inputDevice)->defaultLowInputLatency;
+    inputParams.suggestedLatency          = Pa_GetDeviceInfo(INPUT_DEVICE)->defaultLowInputLatency;
     inputParams.hostApiSpecificStreamInfo = nullptr;
 
-    // 7. Configure output (headphones)
+    // 5. Configure output (WH-CH720N Stereo — MME)
     PaStreamParameters outputParams;
-    outputParams.device                    = outputDevice;
-    outputParams.channelCount              = NUM_CHANNELS;
+    outputParams.device                    = OUTPUT_DEVICE;
+    outputParams.channelCount              = CHANNELS;
     outputParams.sampleFormat              = paFloat32;
-    outputParams.suggestedLatency          = Pa_GetDeviceInfo(outputDevice)->defaultLowOutputLatency;
+    outputParams.suggestedLatency          = Pa_GetDeviceInfo(OUTPUT_DEVICE)->defaultLowOutputLatency;
     outputParams.hostApiSpecificStreamInfo = nullptr;
 
-    // 8. Verify format is supported
+    // 6. Verify format is supported
     PaError supported = Pa_IsFormatSupported(
         &inputParams, &outputParams, SAMPLE_RATE);
     if (supported != paFormatIsSupported) {
         std::cerr << "Format not supported: "
                   << Pa_GetErrorText(supported) << "\n";
-        std::cerr << "Input  API: "
-                  << Pa_GetHostApiInfo(Pa_GetDeviceInfo(inputDevice)->hostApi)->name
-                  << "\n";
-        std::cerr << "Output API: "
-                  << Pa_GetHostApiInfo(Pa_GetDeviceInfo(outputDevice)->hostApi)->name
-                  << "\n";
-        std::cerr << "Try updating INPUT_DEVICE_NAME or OUTPUT_DEVICE_NAME\n";
         Pa_Terminate();
         return 1;
     }
-    std::cout << "Format supported at " << SAMPLE_RATE << " Hz!\n\n";
+    std::cout << "Format supported!\n\n";
 
-    // 9. Open the stream
+    // 7. Open the stream
     AudioState state;
     PaStream*  stream;
 
@@ -237,29 +186,28 @@ int main() {
     );
 
     if (err != paNoError) {
-        std::cerr << "Failed to open stream: " << Pa_GetErrorText(err) << "\n";
+        std::cerr << "Failed to open stream: "
+                  << Pa_GetErrorText(err) << "\n";
         Pa_Terminate();
         return 1;
     }
 
-    // 10. Start the stream
+    // 8. Start the stream
     err = Pa_StartStream(stream);
     if (err != paNoError) {
-        std::cerr << "Failed to start stream: " << Pa_GetErrorText(err) << "\n";
+        std::cerr << "Failed to start stream: "
+                  << Pa_GetErrorText(err) << "\n";
         Pa_Terminate();
         return 1;
     }
 
     std::cout << "Audio stream started!\n";
-    std::cout << "  Sample Rate:  " << SAMPLE_RATE << " Hz\n";
-    std::cout << "  Buffer Size:  " << FRAMES << " frames\n";
-    std::cout << "  Latency:      "
+    std::cout << "  Latency: "
               << (FRAMES * 1000.0 / SAMPLE_RATE) << " ms\n\n";
-    std::cout << "Speak into your laptop mic - noise will be cancelled!\n";
+    std::cout << "Speak into your mic - noise will be cancelled!\n";
     std::cout << "Press ENTER to stop...\n\n";
 
-    // 11. Sender thread — pushes mic audio to Python continuously
-    //     Does not wait for reply — fully async
+    // 9. Sender thread — pushes mic audio to Python continuously
     std::atomic<bool> running(true);
     int sentCount = 0;
 
@@ -278,16 +226,14 @@ int main() {
         }
     });
 
-    // 12. Receiver thread — pulls clean audio from Python
-    //     Updates output buffer whenever clean audio is available
-    //     Never blocks the audio callback
+    // 10. Receiver thread — pulls clean audio from Python
+    //     Non-blocking — never stalls the audio callback
     int receivedCount = 0;
 
     std::thread receiverThread([&]() {
         while (running) {
             zmq::message_t reply;
 
-            // Non-blocking receive
             auto result = pullSocket.recv(
                 reply, zmq::recv_flags::dontwait);
 
@@ -298,26 +244,25 @@ int main() {
                 state.cleanReady = true;
                 receivedCount++;
 
-                if (receivedCount % 50 == 0) {
-                    std::cout << "Received " << receivedCount
-                              << " clean chunks ("
+                if (receivedCount % 100 == 0) {
+                    std::cout << "Processed " << receivedCount
+                              << " chunks ("
                               << (receivedCount * FRAMES / (float)SAMPLE_RATE)
                               << " seconds)\n";
                 }
             }
 
-            // Small sleep to avoid hammering the socket
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
     });
 
-    // 13. Wait for ENTER
+    // 11. Wait for ENTER
     std::cin.get();
     running = false;
     senderThread.join();
     receiverThread.join();
 
-    // 14. Clean up
+    // 12. Clean up
     Pa_StopStream(stream);
     Pa_CloseStream(stream);
     Pa_Terminate();

@@ -1,0 +1,15 @@
+=== E03 Rust ONNX — Subjective Audio Observation ===
+Date: 2026-04-28
+Experiment: Rust ONNX Server (E03)
+
+What I heard:
+- Continuous white noise (shshshsh) throughout the entire session
+- My voice was NOT audible through the headphones
+- The noise was constant and did not react to my voice
+- The noise continued even when I stopped speaking
+
+Conclusion:
+The pipeline is delivering audio to the headphones (proof: we can
+hear something). But the audio content is wrong — it is the model
+output, not processed voice. The ONNX model is outputting a constant
+noise pattern instead of cleaned audio.

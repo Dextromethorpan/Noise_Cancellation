@@ -1,0 +1,71 @@
+C:\Users\Luciano Muratore\NoiseCancellation>ai\rust\target\debug\noise_server.exe
+=== Rust ONNX Noise Server ===
+Model:  ai/python/models/deepfilternet3.onnx
+Frames: 1536
+Pull:   tcp://127.0.0.1:5555
+Push:   tcp://127.0.0.1:5556
+
+Loading ONNX model...
+Model loaded in 167ms
+
+Setting up ZeroMQ sockets...
+PULL socket bound to tcp://127.0.0.1:5555
+PUSH socket bound to tcp://127.0.0.1:5556
+
+Waiting for audio chunks from C++...
+Press Ctrl+C to stop.
+
+Chunks: 50 | Duration: 1s | Avg inference: 0.98ms
+Chunks: 100 | Duration: 3s | Avg inference: 0.94ms
+Chunks: 150 | Duration: 5s | Avg inference: 0.89ms
+Chunks: 200 | Duration: 6s | Avg inference: 0.93ms
+Chunks: 250 | Duration: 8s | Avg inference: 0.96ms
+Chunks: 300 | Duration: 10s | Avg inference: 0.97ms
+Chunks: 350 | Duration: 12s | Avg inference: 0.95ms
+Chunks: 400 | Duration: 13s | Avg inference: 0.94ms
+Chunks: 450 | Duration: 15s | Avg inference: 0.92ms
+Chunks: 500 | Duration: 17s | Avg inference: 0.92ms
+Chunks: 550 | Duration: 19s | Avg inference: 0.93ms
+Chunks: 600 | Duration: 20s | Avg inference: 0.94ms
+Chunks: 650 | Duration: 22s | Avg inference: 0.94ms
+Chunks: 700 | Duration: 24s | Avg inference: 0.94ms
+Chunks: 750 | Duration: 26s | Avg inference: 0.93ms
+Chunks: 800 | Duration: 27s | Avg inference: 0.92ms
+Chunks: 850 | Duration: 29s | Avg inference: 0.94ms
+Chunks: 900 | Duration: 31s | Avg inference: 0.94ms
+Chunks: 950 | Duration: 33s | Avg inference: 0.95ms
+Chunks: 1000 | Duration: 34s | Avg inference: 0.96ms
+Chunks: 1050 | Duration: 36s | Avg inference: 0.94ms
+Chunks: 1100 | Duration: 38s | Avg inference: 0.95ms
+Chunks: 1150 | Duration: 40s | Avg inference: 0.96ms
+Chunks: 1200 | Duration: 41s | Avg inference: 0.97ms
+Chunks: 1250 | Duration: 43s | Avg inference: 0.96ms
+Chunks: 1300 | Duration: 45s | Avg inference: 0.95ms
+Chunks: 1350 | Duration: 47s | Avg inference: 0.96ms
+Chunks: 1400 | Duration: 48s | Avg inference: 0.96ms
+Chunks: 1450 | Duration: 50s | Avg inference: 0.97ms
+Chunks: 1500 | Duration: 52s | Avg inference: 0.97ms
+Chunks: 1550 | Duration: 53s | Avg inference: 0.97ms
+Chunks: 1600 | Duration: 55s | Avg inference: 0.97ms
+Chunks: 1650 | Duration: 57s | Avg inference: 0.96ms
+Chunks: 1700 | Duration: 59s | Avg inference: 0.96ms
+Chunks: 1750 | Duration: 60s | Avg inference: 0.95ms
+Chunks: 1800 | Duration: 62s | Avg inference: 0.95ms
+Chunks: 1850 | Duration: 64s | Avg inference: 0.95ms
+Chunks: 1900 | Duration: 66s | Avg inference: 0.95ms
+Chunks: 1950 | Duration: 67s | Avg inference: 0.96ms
+Chunks: 2000 | Duration: 69s | Avg inference: 0.95ms
+Chunks: 2050 | Duration: 71s | Avg inference: 0.95ms
+Chunks: 2100 | Duration: 73s | Avg inference: 0.95ms
+Chunks: 2150 | Duration: 74s | Avg inference: 0.95ms
+Chunks: 2200 | Duration: 76s | Avg inference: 0.95ms
+Chunks: 2250 | Duration: 78s | Avg inference: 0.95ms
+Chunks: 2300 | Duration: 80s | Avg inference: 0.95ms
+Chunks: 2350 | Duration: 81s | Avg inference: 0.95ms
+Chunks: 2400 | Duration: 83s | Avg inference: 0.95ms
+Chunks: 2450 | Duration: 85s | Avg inference: 0.94ms
+Chunks: 2500 | Duration: 87s | Avg inference: 0.94ms
+Chunks: 2550 | Duration: 88s | Avg inference: 0.94ms
+Chunks: 2600 | Duration: 90s | Avg inference: 0.94ms
+Chunks: 2650 | Duration: 92s | Avg inference: 0.93ms
+Chunks: 2700 | Duration: 94s | Avg inference: 0.93ms

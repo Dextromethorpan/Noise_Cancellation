@@ -1,8 +1,10 @@
 # C++ build artifacts
+engine/build/
 cpp/build/
 
 # Python virtual environment
 python/venv/
+ai/python/venv/
 
 # Python cache
 __pycache__/
@@ -13,9 +15,11 @@ __pycache__/
 .vscode/
 
 # Audio test files
-python/noisy_input.wav
-python/clean_output.wav
+*.wav
 
 # Windows artifacts
 Thumbs.db
 desktop.ini
+
+# Model files (large)
+*.onnx

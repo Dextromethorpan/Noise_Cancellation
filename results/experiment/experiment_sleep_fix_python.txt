@@ -1,0 +1,136 @@
+(venv) C:\Users\Luciano Muratore\NoiseCancellation\python>python server_async.py
+Loading DeepFilterNet model...
+2026-04-28 14:59:40 | INFO     | DF | Running on torch 2.0.1+cpu2026-04-28 14:59:40 | INFO     | DF | Running on host DESKTOP-R02PTCP
+2026-04-28 14:59:41 | INFO     | DF | Git commit: 8d1f371, branch: feature/phase4-experiments
+2026-04-28 14:59:41 | INFO     | DF | Loading model settings of DeepFilterNet3
+2026-04-28 14:59:41 | INFO     | DF | Using DeepFilterNet3 model at C:\Users\Luciano Muratore\AppData\Local\DeepFilterNet\DeepFilterNet\Cache\DeepFilterNet3
+2026-04-28 14:59:41 | INFO     | DF | Initializing model `deepfilternet3`
+2026-04-28 14:59:42 | INFO     | DF | Found checkpoint C:\Users\Luciano Muratore\AppData\Local\DeepFilterNet\DeepFilterNet\Cache\DeepFilterNet3\checkpoints\model_120.ckpt.best with epoch 120
+2026-04-28 14:59:42 | INFO     | DF | Running on device cpu
+2026-04-28 14:59:42 | INFO     | DF | Model loaded
+Model loaded!
+Async server listening:
+  PULL noisy audio on tcp://127.0.0.1:5555
+  PUSH clean audio on tcp://127.0.0.1:5556
+Waiting for audio chunks from C++...
+
+Receiver thread started.
+Processor thread started.
+Sender thread started.
+All threads running!
+Press Ctrl+C to stop.
+
+Processed 50 chunks (0.6s) | Queue: in=0 out=1
+Processed 100 chunks (1.2s) | Queue: in=0 out=1
+Processed 150 chunks (1.7s) | Queue: in=0 out=1
+Processed 200 chunks (2.3s) | Queue: in=0 out=1
+Processed 250 chunks (2.9s) | Queue: in=0 out=1
+Processed 300 chunks (3.5s) | Queue: in=0 out=1
+Processed 350 chunks (4.1s) | Queue: in=0 out=1
+Processed 400 chunks (4.6s) | Queue: in=0 out=1
+Processed 450 chunks (5.2s) | Queue: in=0 out=1
+Processed 500 chunks (5.8s) | Queue: in=0 out=1
+Processed 550 chunks (6.4s) | Queue: in=1 out=1
+Processed 600 chunks (7.0s) | Queue: in=0 out=1
+Processed 650 chunks (7.5s) | Queue: in=0 out=1
+Processed 700 chunks (8.1s) | Queue: in=0 out=1
+Processed 750 chunks (8.7s) | Queue: in=0 out=1
+Processed 800 chunks (9.3s) | Queue: in=0 out=1
+Processed 850 chunks (9.9s) | Queue: in=0 out=1
+Processed 900 chunks (10.4s) | Queue: in=1 out=1
+Processed 950 chunks (11.0s) | Queue: in=0 out=1
+Processed 1000 chunks (11.6s) | Queue: in=0 out=1
+Processed 1050 chunks (12.2s) | Queue: in=0 out=1
+Processed 1100 chunks (12.8s) | Queue: in=2 out=1
+Processed 1150 chunks (13.4s) | Queue: in=0 out=1
+Processed 1200 chunks (13.9s) | Queue: in=7 out=1
+Processed 1250 chunks (14.5s) | Queue: in=2 out=1
+Processed 1300 chunks (15.1s) | Queue: in=0 out=1
+Processed 1350 chunks (15.7s) | Queue: in=9 out=1
+Processed 1400 chunks (16.3s) | Queue: in=8 out=1
+Processed 1450 chunks (16.8s) | Queue: in=3 out=1
+Processed 1500 chunks (17.4s) | Queue: in=0 out=1
+Processed 1550 chunks (18.0s) | Queue: in=0 out=1
+Processed 1600 chunks (18.6s) | Queue: in=0 out=1
+Processed 1650 chunks (19.2s) | Queue: in=0 out=1
+Processed 1700 chunks (19.7s) | Queue: in=0 out=1
+Processed 1750 chunks (20.3s) | Queue: in=0 out=1
+Processed 1800 chunks (20.9s) | Queue: in=0 out=1
+Processed 1850 chunks (21.5s) | Queue: in=0 out=1
+Processed 1900 chunks (22.1s) | Queue: in=0 out=1
+Processed 1950 chunks (22.6s) | Queue: in=0 out=1
+Processed 2000 chunks (23.2s) | Queue: in=0 out=1
+Processed 2050 chunks (23.8s) | Queue: in=0 out=1
+Processed 2100 chunks (24.4s) | Queue: in=0 out=1
+Processed 2150 chunks (25.0s) | Queue: in=0 out=1
+Processed 2200 chunks (25.5s) | Queue: in=0 out=1
+Processed 2250 chunks (26.1s) | Queue: in=0 out=1
+Processed 2300 chunks (26.7s) | Queue: in=0 out=1
+Processed 2350 chunks (27.3s) | Queue: in=0 out=1
+Processed 2400 chunks (27.9s) | Queue: in=0 out=1
+Processed 2450 chunks (28.4s) | Queue: in=0 out=1
+Processed 2500 chunks (29.0s) | Queue: in=0 out=1
+Processed 2550 chunks (29.6s) | Queue: in=0 out=1
+Processed 2600 chunks (30.2s) | Queue: in=0 out=1
+Processed 2650 chunks (30.8s) | Queue: in=0 out=1
+Processed 2700 chunks (31.3s) | Queue: in=0 out=1
+Processed 2750 chunks (31.9s) | Queue: in=0 out=1
+Processed 2800 chunks (32.5s) | Queue: in=0 out=1
+Processed 2850 chunks (33.1s) | Queue: in=0 out=1
+Processed 2900 chunks (33.7s) | Queue: in=0 out=1
+Processed 2950 chunks (34.2s) | Queue: in=0 out=1
+Processed 3000 chunks (34.8s) | Queue: in=0 out=1
+Processed 3050 chunks (35.4s) | Queue: in=0 out=1
+Processed 3100 chunks (36.0s) | Queue: in=0 out=1
+Processed 3150 chunks (36.6s) | Queue: in=0 out=1
+Processed 3200 chunks (37.2s) | Queue: in=0 out=1
+Processed 3250 chunks (37.7s) | Queue: in=0 out=1
+Processed 3300 chunks (38.3s) | Queue: in=0 out=1
+Processed 3350 chunks (38.9s) | Queue: in=0 out=1
+Processed 3400 chunks (39.5s) | Queue: in=0 out=1
+Processed 3450 chunks (40.1s) | Queue: in=0 out=1
+Processed 3500 chunks (40.6s) | Queue: in=0 out=1
+Processed 3550 chunks (41.2s) | Queue: in=0 out=1
+Processed 3600 chunks (41.8s) | Queue: in=0 out=1
+Processed 3650 chunks (42.4s) | Queue: in=0 out=1
+Processed 3700 chunks (43.0s) | Queue: in=0 out=1
+Processed 3750 chunks (43.5s) | Queue: in=0 out=1
+Processed 3800 chunks (44.1s) | Queue: in=0 out=1
+Processed 3850 chunks (44.7s) | Queue: in=0 out=1
+Processed 3900 chunks (45.3s) | Queue: in=0 out=1
+Processed 3950 chunks (45.9s) | Queue: in=0 out=1
+Processed 4000 chunks (46.4s) | Queue: in=0 out=1
+Processed 4050 chunks (47.0s) | Queue: in=0 out=1
+Processed 4100 chunks (47.6s) | Queue: in=0 out=1
+Processed 4150 chunks (48.2s) | Queue: in=0 out=1
+Processed 4200 chunks (48.8s) | Queue: in=0 out=1
+Processed 4250 chunks (49.3s) | Queue: in=0 out=1
+Processed 4300 chunks (49.9s) | Queue: in=0 out=1
+Processed 4350 chunks (50.5s) | Queue: in=0 out=1
+Processed 4400 chunks (51.1s) | Queue: in=0 out=1
+Processed 4450 chunks (51.7s) | Queue: in=0 out=1
+Processed 4500 chunks (52.2s) | Queue: in=0 out=1
+Processed 4550 chunks (52.8s) | Queue: in=0 out=1
+Processed 4600 chunks (53.4s) | Queue: in=0 out=1
+Processed 4650 chunks (54.0s) | Queue: in=0 out=1
+Processed 4700 chunks (54.6s) | Queue: in=0 out=1
+Processed 4750 chunks (55.1s) | Queue: in=0 out=1
+Processed 4800 chunks (55.7s) | Queue: in=0 out=1
+Processed 4850 chunks (56.3s) | Queue: in=0 out=1
+Processed 4900 chunks (56.9s) | Queue: in=0 out=1
+Processed 4950 chunks (57.5s) | Queue: in=0 out=1
+Processed 5000 chunks (58.0s) | Queue: in=0 out=1
+Processed 5050 chunks (58.6s) | Queue: in=0 out=1
+Processed 5100 chunks (59.2s) | Queue: in=0 out=1
+Processed 5150 chunks (59.8s) | Queue: in=0 out=1
+Processed 5200 chunks (60.4s) | Queue: in=0 out=1
+Processed 5250 chunks (61.0s) | Queue: in=0 out=1
+Processed 5300 chunks (61.5s) | Queue: in=0 out=1
+Processed 5350 chunks (62.1s) | Queue: in=0 out=1
+Processed 5400 chunks (62.7s) | Queue: in=0 out=1
+Processed 5450 chunks (63.3s) | Queue: in=0 out=1
+Processed 5500 chunks (63.9s) | Queue: in=0 out=1
+Processed 5550 chunks (64.4s) | Queue: in=0 out=1
+Processed 5600 chunks (65.0s) | Queue: in=0 out=1
+
+Server stopped.

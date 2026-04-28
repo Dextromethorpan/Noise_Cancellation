@@ -1,0 +1,168 @@
+C:\Users\Luciano Muratore\NoiseCancellation\cpp\build\Debug>SleepFixTest.exe
+=== Experiment: Sleep Fix (microsecond precision) ===
+Sleep duration: 34829 microseconds
+              = 34.829 ms
+
+Connecting to Python server...
+Connected!
+
+
+=== Available Audio Devices ===
+[0] Microsoft Sound Mapper - Input | IN: 2 | OUT: 0 | SR: 44100 | API: MME
+[1] Microfoon (Realtek Audio) | IN: 2 | OUT: 0 | SR: 44100 | API: MME
+[2] Headset (WH-CH720N Hands-Free A | IN: 1 | OUT: 0 | SR: 44100 | API: MME
+[3] Microsoft Sound Mapper - Output | IN: 0 | OUT: 2 | SR: 44100 | API: MME
+[4] Headphones (WH-CH720N Stereo) | IN: 0 | OUT: 2 | SR: 44100 | API: MME
+[5] Headset (WH-CH720N Hands-Free A | IN: 0 | OUT: 1 | SR: 44100 | API: MME
+[6] Luidsprekers / koptelefoons (Re | IN: 0 | OUT: 6 | SR: 44100 | API: MME
+[7] Primary Sound Capture Driver | IN: 2 | OUT: 0 | SR: 44100 | API: Windows DirectSound
+[8] Microfoon (Realtek Audio) | IN: 2 | OUT: 0 | SR: 44100 | API: Windows DirectSound
+[9] Headset (WH-CH720N Hands-Free AG Audio) | IN: 1 | OUT: 0 | SR: 44100 | API: Windows DirectSound
+[10] Primary Sound Driver | IN: 0 | OUT: 2 | SR: 44100 | API: Windows DirectSound
+[11] Headphones (WH-CH720N Stereo) | IN: 0 | OUT: 2 | SR: 44100 | API: Windows DirectSound
+[12] Headset (WH-CH720N Hands-Free AG Audio) | IN: 0 | OUT: 1 | SR: 44100 | API: Windows DirectSound
+[13] Luidsprekers / koptelefoons (Realtek Audio) | IN: 0 | OUT: 6 | SR: 44100 | API: Windows DirectSound
+[14] Realtek ASIO | IN: 2 | OUT: 2 | SR: 44100 | API: ASIO
+[15] Headphones (WH-CH720N Stereo) | IN: 0 | OUT: 2 | SR: 44100 | API: Windows WASAPI
+[16] Headset (WH-CH720N Hands-Free AG Audio) | IN: 0 | OUT: 1 | SR: 16000 | API: Windows WASAPI
+[17] Luidsprekers / koptelefoons (Realtek Audio) | IN: 0 | OUT: 2 | SR: 48000 | API: Windows WASAPI
+[18] Microfoon (Realtek Audio) | IN: 2 | OUT: 0 | SR: 48000 | API: Windows WASAPI
+[19] Headset (WH-CH720N Hands-Free AG Audio) | IN: 1 | OUT: 0 | SR: 16000 | API: Windows WASAPI
+[20] Speakers 1 (Realtek HD Audio output with SST) | IN: 0 | OUT: 2 | SR: 44100 | API: Windows WDM-KS
+[21] Speakers 2 (Realtek HD Audio output with SST) | IN: 0 | OUT: 6 | SR: 44100 | API: Windows WDM-KS
+[22] PC Speaker (Realtek HD Audio output with SST) | IN: 2 | OUT: 0 | SR: 48000 | API: Windows WDM-KS
+[23] Stereo Mix (Realtek HD Audio Stereo input) | IN: 2 | OUT: 0 | SR: 48000 | API: Windows WDM-KS
+[24] Microphone (Realtek HD Audio Mic input) | IN: 2 | OUT: 0 | SR: 44100 | API: Windows WDM-KS
+[25] Headset (@System32\drivers\bthhfenum.sys,#2;%1 Hands-Free AG Audio%0
+;(WH-CH720N)) | IN: 0 | OUT: 1 | SR: 16000 | API: Windows WDM-KS[26] Headset (@System32\drivers\bthhfenum.sys,#2;%1 Hands-Free AG Audio%0
+;(WH-CH720N)) | IN: 1 | OUT: 0 | SR: 16000 | API: Windows WDM-KS[27] Headphones () | IN: 0 | OUT: 2 | SR: 44100 | API: Windows WDM-KS
+Default Input:  1
+Default Output: 4
+================================
+
+Using devices:
+  Input:  [1] Microfoon (Realtek Audio)
+  Output: [4] Headphones (WH-CH720N Stereo)
+
+Format supported!
+
+Audio stream started!
+  Sample Rate:    44100 Hz
+  Buffer Size:    1536 frames
+  Chunk time:     34.829 ms
+
+Speak into your mic ΓÇö noise will be cancelled!
+Press ENTER to stop...
+
+Chunks: sent=50 received=50 dropped=0 (0%)
+Chunks: sent=100 received=100 dropped=0 (0%)
+Chunks: sent=150 received=150 dropped=0 (0%)
+Chunks: sent=200 received=200 dropped=0 (0%)
+Chunks: sent=250 received=250 dropped=0 (0%)
+Chunks: sent=300 received=300 dropped=0 (0%)
+Chunks: sent=350 received=350 dropped=0 (0%)
+Chunks: sent=400 received=400 dropped=0 (0%)
+Chunks: sent=450 received=450 dropped=0 (0%)
+Chunks: sent=500 received=500 dropped=0 (0%)
+Chunks: sent=551 received=550 dropped=1 (0.181488%)
+Chunks: sent=600 received=600 dropped=0 (0%)
+Chunks: sent=650 received=650 dropped=0 (0%)
+Chunks: sent=700 received=700 dropped=0 (0%)
+Chunks: sent=750 received=750 dropped=0 (0%)
+Chunks: sent=800 received=800 dropped=0 (0%)
+Chunks: sent=851 received=850 dropped=1 (0.117509%)
+Chunks: sent=901 received=900 dropped=1 (0.110988%)
+Chunks: sent=951 received=950 dropped=1 (0.105152%)
+Chunks: sent=1000 received=1000 dropped=0 (0%)
+Chunks: sent=1050 received=1050 dropped=0 (0%)
+Chunks: sent=1102 received=1100 dropped=2 (0.181488%)
+Chunks: sent=1150 received=1150 dropped=0 (0%)
+Chunks: sent=1208 received=1200 dropped=8 (0.662252%)
+Chunks: sent=1252 received=1250 dropped=2 (0.159744%)
+Chunks: sent=1301 received=1300 dropped=1 (0.076864%)
+Chunks: sent=1411 received=1350 dropped=61 (4.32318%)
+Chunks: sent=1461 received=1400 dropped=61 (4.17522%)
+Chunks: sent=1506 received=1450 dropped=55 (3.65449%)
+Chunks: sent=1553 received=1500 dropped=52 (3.35052%)
+Chunks: sent=1602 received=1550 dropped=52 (3.24594%)
+Chunks: sent=1652 received=1600 dropped=52 (3.1477%)
+Chunks: sent=1702 received=1650 dropped=52 (3.05523%)
+Chunks: sent=1752 received=1700 dropped=52 (2.96804%)
+Chunks: sent=1802 received=1750 dropped=52 (2.88568%)
+Chunks: sent=1852 received=1800 dropped=52 (2.80778%)
+Chunks: sent=1902 received=1850 dropped=52 (2.73396%)
+Chunks: sent=1952 received=1900 dropped=52 (2.66393%)
+Chunks: sent=2003 received=1950 dropped=52 (2.5974%)
+Chunks: sent=2052 received=2000 dropped=52 (2.53411%)
+Chunks: sent=2102 received=2050 dropped=52 (2.47383%)
+Chunks: sent=2152 received=2100 dropped=52 (2.41636%)
+Chunks: sent=2202 received=2150 dropped=52 (2.36149%)
+Chunks: sent=2252 received=2200 dropped=52 (2.30906%)
+Chunks: sent=2302 received=2250 dropped=52 (2.25891%)
+Chunks: sent=2352 received=2300 dropped=52 (2.21088%)
+Chunks: sent=2402 received=2350 dropped=52 (2.16486%)
+Chunks: sent=2452 received=2400 dropped=52 (2.12072%)
+Chunks: sent=2502 received=2450 dropped=52 (2.07834%)
+Chunks: sent=2552 received=2500 dropped=52 (2.03762%)
+Chunks: sent=2602 received=2550 dropped=52 (1.99846%)
+Chunks: sent=2655 received=2600 dropped=55 (2.07156%)
+Chunks: sent=2705 received=2650 dropped=55 (2.03327%)
+Chunks: sent=2755 received=2700 dropped=55 (1.99637%)
+Chunks: sent=2805 received=2750 dropped=55 (1.96078%)
+Chunks: sent=2855 received=2800 dropped=55 (1.92644%)
+Chunks: sent=2905 received=2850 dropped=55 (1.89329%)
+Chunks: sent=2955 received=2900 dropped=55 (1.86125%)
+Chunks: sent=3005 received=2950 dropped=55 (1.83028%)
+Chunks: sent=3055 received=3000 dropped=55 (1.80033%)
+Chunks: sent=3105 received=3050 dropped=55 (1.77134%)
+Chunks: sent=3155 received=3100 dropped=55 (1.74326%)
+Chunks: sent=3205 received=3150 dropped=55 (1.71607%)
+Chunks: sent=3255 received=3200 dropped=55 (1.68971%)
+Chunks: sent=3305 received=3250 dropped=55 (1.66415%)
+Chunks: sent=3355 received=3300 dropped=55 (1.63934%)
+Chunks: sent=3405 received=3350 dropped=55 (1.61527%)
+Chunks: sent=3455 received=3400 dropped=55 (1.5919%)
+Chunks: sent=3506 received=3450 dropped=55 (1.56919%)
+Chunks: sent=3555 received=3500 dropped=55 (1.54712%)
+Chunks: sent=3605 received=3550 dropped=55 (1.52566%)
+Chunks: sent=3655 received=3600 dropped=55 (1.50479%)
+Chunks: sent=3705 received=3650 dropped=55 (1.48448%)
+Chunks: sent=3755 received=3700 dropped=55 (1.46471%)
+Chunks: sent=3805 received=3750 dropped=55 (1.44547%)
+Chunks: sent=3855 received=3800 dropped=55 (1.42672%)
+Chunks: sent=3905 received=3850 dropped=55 (1.40845%)
+Chunks: sent=3955 received=3900 dropped=55 (1.39064%)
+Chunks: sent=4006 received=3950 dropped=56 (1.3979%)
+Chunks: sent=4055 received=4000 dropped=55 (1.35635%)
+Chunks: sent=4105 received=4050 dropped=55 (1.33983%)
+Chunks: sent=4155 received=4100 dropped=55 (1.32371%)
+Chunks: sent=4205 received=4150 dropped=55 (1.30797%)
+Chunks: sent=4255 received=4200 dropped=55 (1.2926%)
+Chunks: sent=4305 received=4250 dropped=55 (1.27758%)
+Chunks: sent=4355 received=4300 dropped=55 (1.26292%)
+Chunks: sent=4405 received=4350 dropped=55 (1.24858%)
+Chunks: sent=4455 received=4400 dropped=55 (1.23457%)
+Chunks: sent=4505 received=4450 dropped=55 (1.22087%)
+Chunks: sent=4555 received=4500 dropped=55 (1.20746%)
+Chunks: sent=4605 received=4550 dropped=55 (1.19435%)
+Chunks: sent=4655 received=4600 dropped=55 (1.18153%)
+Chunks: sent=4705 received=4650 dropped=55 (1.16897%)
+Chunks: sent=4755 received=4700 dropped=55 (1.15668%)
+Chunks: sent=4805 received=4750 dropped=55 (1.14464%)
+Chunks: sent=4855 received=4800 dropped=55 (1.13285%)
+Chunks: sent=4905 received=4850 dropped=55 (1.1213%)
+Chunks: sent=4955 received=4900 dropped=55 (1.10999%)
+Chunks: sent=5005 received=4950 dropped=55 (1.0989%)
+Chunks: sent=5055 received=5000 dropped=55 (1.08803%)
+Chunks: sent=5105 received=5050 dropped=55 (1.07738%)
+Chunks: sent=5155 received=5100 dropped=55 (1.06693%)
+Chunks: sent=5205 received=5150 dropped=55 (1.05668%)
+Chunks: sent=5255 received=5200 dropped=55 (1.04662%)
+Chunks: sent=5305 received=5250 dropped=55 (1.03676%)
+Chunks: sent=5355 received=5300 dropped=55 (1.02708%)
+Chunks: sent=5405 received=5350 dropped=55 (1.01758%)
+Chunks: sent=5455 received=5400 dropped=55 (1.00825%)
+Chunks: sent=5505 received=5450 dropped=55 (0.999092%)
+Chunks: sent=5555 received=5500 dropped=55 (0.990099%)
+Chunks: sent=5605 received=5550 dropped=55 (0.981267%)
+Chunks: sent=5655 received=5600 dropped=55 (0.972591%)

@@ -1,0 +1,61 @@
+=== Noise Cancellation - Phase 4: Async Pipeline ===
+
+Connecting to Python server...
+Connected!
+
+
+=== Available Audio Devices ===
+[0] Microsoft Sound Mapper - Input | IN: 2 | OUT: 0 | SR: 44100 | API: MME
+[1] Microfoon (Realtek Audio) | IN: 2 | OUT: 0 | SR: 44100 | API: MME
+[2] Headset (WH-CH720N Hands-Free A | IN: 1 | OUT: 0 | SR: 44100 | API: MME
+[3] Microsoft Sound Mapper - Output | IN: 0 | OUT: 2 | SR: 44100 | API: MME
+[4] Headphones (WH-CH720N Stereo) | IN: 0 | OUT: 2 | SR: 44100 | API: MME
+[5] Headset (WH-CH720N Hands-Free A | IN: 0 | OUT: 1 | SR: 44100 | API: MME
+[6] Luidsprekers / koptelefoons (Re | IN: 0 | OUT: 6 | SR: 44100 | API: MME
+[7] Primary Sound Capture Driver | IN: 2 | OUT: 0 | SR: 44100 | API: Windows DirectSound
+[8] Microfoon (Realtek Audio) | IN: 2 | OUT: 0 | SR: 44100 | API: Windows DirectSound
+[9] Headset (WH-CH720N Hands-Free AG Audio) | IN: 1 | OUT: 0 | SR: 44100 | API: Windows DirectSound
+[10] Primary Sound Driver | IN: 0 | OUT: 2 | SR: 44100 | API: Windows DirectSound
+[11] Headphones (WH-CH720N Stereo) | IN: 0 | OUT: 2 | SR: 44100 | API: Windows DirectSound
+[12] Headset (WH-CH720N Hands-Free AG Audio) | IN: 0 | OUT: 1 | SR: 44100 | API: Windows DirectSound
+[13] Luidsprekers / koptelefoons (Realtek Audio) | IN: 0 | OUT: 6 | SR: 44100 | API: Windows DirectSound
+[14] Realtek ASIO | IN: 2 | OUT: 2 | SR: 44100 | API: ASIO
+[15] Headphones (WH-CH720N Stereo) | IN: 0 | OUT: 2 | SR: 44100 | API: Windows WASAPI
+[16] Headset (WH-CH720N Hands-Free AG Audio) | IN: 0 | OUT: 1 | SR: 16000 | API: Windows WASAPI
+[17] Luidsprekers / koptelefoons (Realtek Audio) | IN: 0 | OUT: 2 | SR: 48000 | API: Windows WASAPI
+[18] Microfoon (Realtek Audio) | IN: 2 | OUT: 0 | SR: 48000 | API: Windows WASAPI
+[19] Headset (WH-CH720N Hands-Free AG Audio) | IN: 1 | OUT: 0 | SR: 16000 | API: Windows WASAPI
+[20] Speakers 1 (Realtek HD Audio output with SST) | IN: 0 | OUT: 2 | SR: 44100 | API: Windows WDM-KS
+[21] Speakers 2 (Realtek HD Audio output with SST) | IN: 0 | OUT: 6 | SR: 44100 | API: Windows WDM-KS
+[22] PC Speaker (Realtek HD Audio output with SST) | IN: 2 | OUT: 0 | SR: 48000 | API: Windows WDM-KS
+[23] Stereo Mix (Realtek HD Audio Stereo input) | IN: 2 | OUT: 0 | SR: 48000 | API: Windows WDM-KS
+[24] Microphone (Realtek HD Audio Mic input) | IN: 2 | OUT: 0 | SR: 44100 | API: Windows WDM-KS
+[25] Headset (@System32\drivers\bthhfenum.sys,#2;%1 Hands-Free AG Audio%0
+
+;(WH-CH720N)) | IN: 0 | OUT: 1 | SR: 16000 | API: Windows WDM-KS
+[26] Headset (@System32\drivers\bthhfenum.sys,#2;%1 Hands-Free AG Audio%0
+
+;(WH-CH720N)) | IN: 1 | OUT: 0 | SR: 16000 | API: Windows WDM-KS
+[27] Headphones () | IN: 0 | OUT: 2 | SR: 44100 | API: Windows WDM-KS
+Default Input:  1
+Default Output: 4
+================================
+
+Using devices:
+  Input:  [1] Microfoon (Realtek Audio)
+  Output: [4] Headphones (WH-CH720N Stereo)
+  Channels:    1 (mono)
+  Sample Rate: 44100 Hz
+  Buffer Size: 512 frames
+
+Format supported!
+
+Audio stream started!
+  Latency: 11.61 ms
+
+Speak int
+o your mic - noise will be cancelled!
+Press ENTER to stop...
+
+
+

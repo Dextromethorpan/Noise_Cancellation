@@ -3,11 +3,8 @@ project(NoiseCancellation)
 
 set(CMAKE_CXX_STANDARD 17)
 
-# PortAudio paths
 set(PORTAUDIO_ROOT "C:/dev/portaudio")
-
-# ZeroMQ paths
-set(ZEROMQ_ROOT "C:/dev/zeromq")
+set(ZEROMQ_ROOT    "C:/dev/zeromq")
 
 # -----------------------------------------------
 # Main executable — full async pipeline
@@ -18,12 +15,10 @@ target_include_directories(NoiseCancellation PRIVATE
     ${PORTAUDIO_ROOT}/include
     ${ZEROMQ_ROOT}/include
 )
-
 target_link_libraries(NoiseCancellation PRIVATE
     ${PORTAUDIO_ROOT}/lib/portaudio.lib
     ${ZEROMQ_ROOT}/lib/libzmq-v143-mt-4_3_5.lib
 )
-
 add_custom_command(TARGET NoiseCancellation POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${PORTAUDIO_ROOT}/portaudio.dll"
@@ -35,18 +30,15 @@ add_custom_command(TARGET NoiseCancellation POST_BUILD
 
 # -----------------------------------------------
 # Passthrough test — no ZeroMQ
-# Verifies audio devices work correctly
 # -----------------------------------------------
-add_executable(PassthroughTest src/passthrough_test.cpp)
+add_executable(PassthroughTest experiments/passthrough_test.cpp)
 
 target_include_directories(PassthroughTest PRIVATE
     ${PORTAUDIO_ROOT}/include
 )
-
 target_link_libraries(PassthroughTest PRIVATE
     ${PORTAUDIO_ROOT}/lib/portaudio.lib
 )
-
 add_custom_command(TARGET PassthroughTest POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${PORTAUDIO_ROOT}/portaudio.dll"
@@ -54,21 +46,18 @@ add_custom_command(TARGET PassthroughTest POST_BUILD
 )
 
 # -----------------------------------------------
-# Passthrough 1536 test — with ZeroMQ
-# Tests correct buffer size for Python AI
+# Passthrough 1536 — with ZeroMQ
 # -----------------------------------------------
-add_executable(Passthrough1536 src/passthrough_1536.cpp)
+add_executable(Passthrough1536 experiments/passthrough_1536.cpp)
 
 target_include_directories(Passthrough1536 PRIVATE
     ${PORTAUDIO_ROOT}/include
     ${ZEROMQ_ROOT}/include
 )
-
 target_link_libraries(Passthrough1536 PRIVATE
     ${PORTAUDIO_ROOT}/lib/portaudio.lib
     ${ZEROMQ_ROOT}/lib/libzmq-v143-mt-4_3_5.lib
 )
-
 add_custom_command(TARGET Passthrough1536 POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${PORTAUDIO_ROOT}/portaudio.dll"
@@ -81,18 +70,16 @@ add_custom_command(TARGET Passthrough1536 POST_BUILD
 # -----------------------------------------------
 # Sleep fix experiment
 # -----------------------------------------------
-add_executable(SleepFixTest src/passthrough_sleep_fix.cpp)
+add_executable(SleepFixTest experiments/passthrough_sleep_fix.cpp)
 
 target_include_directories(SleepFixTest PRIVATE
     ${PORTAUDIO_ROOT}/include
     ${ZEROMQ_ROOT}/include
 )
-
 target_link_libraries(SleepFixTest PRIVATE
     ${PORTAUDIO_ROOT}/lib/portaudio.lib
     ${ZEROMQ_ROOT}/lib/libzmq-v143-mt-4_3_5.lib
 )
-
 add_custom_command(TARGET SleepFixTest POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${PORTAUDIO_ROOT}/portaudio.dll"

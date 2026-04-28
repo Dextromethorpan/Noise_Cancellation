@@ -1,0 +1,25 @@
+[package]
+name = "noise_server"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "noise_server"
+path = "src/main.rs"
+
+[dependencies]
+# ZeroMQ binding for Rust
+zmq = "0.10"
+
+# ONNX Runtime for inference
+ort = { version = "1.16", features = ["load-dynamic"] }
+
+# Numerical arrays (like numpy for Rust)
+ndarray = "0.15"
+
+# Error handling
+anyhow = "1.0"
+
+# Logging
+env_logger = "0.10"
+log = "0.4"

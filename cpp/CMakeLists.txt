@@ -77,3 +77,27 @@ add_custom_command(TARGET Passthrough1536 POST_BUILD
         "${ZEROMQ_ROOT}/bin/libzmq-v143-mt-4_3_5.dll"
         $<TARGET_FILE_DIR:Passthrough1536>
 )
+
+# -----------------------------------------------
+# Sleep fix experiment
+# -----------------------------------------------
+add_executable(SleepFixTest src/passthrough_sleep_fix.cpp)
+
+target_include_directories(SleepFixTest PRIVATE
+    ${PORTAUDIO_ROOT}/include
+    ${ZEROMQ_ROOT}/include
+)
+
+target_link_libraries(SleepFixTest PRIVATE
+    ${PORTAUDIO_ROOT}/lib/portaudio.lib
+    ${ZEROMQ_ROOT}/lib/libzmq-v143-mt-4_3_5.lib
+)
+
+add_custom_command(TARGET SleepFixTest POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${PORTAUDIO_ROOT}/portaudio.dll"
+        $<TARGET_FILE_DIR:SleepFixTest>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${ZEROMQ_ROOT}/bin/libzmq-v143-mt-4_3_5.dll"
+        $<TARGET_FILE_DIR:SleepFixTest>
+)

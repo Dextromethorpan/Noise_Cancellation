@@ -8,18 +8,9 @@ name = "noise_server"
 path = "src/main.rs"
 
 [dependencies]
-# ZeroMQ binding for Rust
-zmq = "0.10"
-
-# ONNX Runtime for inference
-ort = { version = "1.16", features = ["load-dynamic"] }
-
-# Numerical arrays (like numpy for Rust)
-ndarray = "0.15"
-
-# Error handling
-anyhow = "1.0"
-
-# Logging
+zmq        = "0.10"
+ort        = { version = "2.0.0-rc.12", features = ["ndarray"] }
+ndarray    = "0.16"
+anyhow     = "1.0"
 env_logger = "0.10"
-log = "0.4"
+log        = "0.4"

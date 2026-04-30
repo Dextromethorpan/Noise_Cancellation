@@ -3,9 +3,15 @@ name = "noise_server"
 version = "0.1.0"
 edition = "2021"
 
+# Phase 5 — per-chunk pipeline (reference, do not remove)
 [[bin]]
 name = "noise_server"
 path = "src/main.rs"
+
+# Phase 6 — continuous stream pipeline (current)
+[[bin]]
+name = "stream_server"
+path = "src/stream_server.rs"
 
 [dependencies]
 zmq         = "0.10"
@@ -14,6 +20,6 @@ deep_filter = "0.2.5"
 anyhow      = "1.0"
 env_logger  = "0.10"
 log         = "0.4"
-configparser = "2.0"
 rubato      = "0.14"
 ndarray     = "0.15"
+configparser = "2.0"

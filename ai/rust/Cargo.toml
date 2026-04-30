@@ -8,9 +8,12 @@ name = "noise_server"
 path = "src/main.rs"
 
 [dependencies]
-zmq          = "0.10"
-ort          = { version = "2.0.0-rc.12" }
-deep_filter  = "0.2.5"
-anyhow       = "1.0"
-env_logger   = "0.10"
-log          = "0.4"
+zmq         = "0.10"
+ort         = { version = "2.0.0-rc.12" }
+deep_filter = "0.2.5"
+anyhow      = "1.0"
+env_logger  = "0.10"
+log         = "0.4"
+configparser = "2.0"
+rubato      = "0.14"
+ndarray     = "0.15"

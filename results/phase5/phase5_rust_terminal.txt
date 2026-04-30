@@ -1,0 +1,47 @@
+C:\Users\Luciano Muratore\NoiseCancellation>ai\rust\target\release\noise_server.exe
+[2026-04-30T09:27:13Z INFO  noise_server] Phase 5 — DeepFilterNet3 three-model Rust server
+[2026-04-30T09:27:13Z INFO  noise_server]   enc:     ai/python/models/tmp/export/enc.onnx
+[2026-04-30T09:27:13Z INFO  noise_server]   erb_dec: ai/python/models/tmp/export/erb_dec.onnx
+[2026-04-30T09:27:13Z INFO  noise_server]   df_dec:  ai/python/models/tmp/export/df_dec.onnx
+[2026-04-30T09:27:13Z INFO  noise_server] Loading enc.onnx …
+[2026-04-30T09:27:13Z INFO  noise_server] Loading erb_dec.onnx …[2026-04-30T09:27:14Z INFO  noise_server] Loading df_dec.onnx …
+[2026-04-30T09:27:14Z INFO  noise_server] All models loaded.
+[2026-04-30T09:27:14Z INFO  noise_server] ZeroMQ ready — PULL tcp://127.0.0.1:5555  PUSH tcp://127.0.0.1:5556
+[2026-04-30T09:27:22Z INFO  noise_server] chunk=50  avg=13.76ms  last=24.71ms
+[2026-04-30T09:27:24Z INFO  noise_server] chunk=100  avg=13.91ms  last=12.23ms
+[2026-04-30T09:27:26Z INFO  noise_server] chunk=150  avg=13.18ms  last=17.96ms
+[2026-04-30T09:27:28Z INFO  noise_server] chunk=200  avg=12.14ms  last=16.58ms
+[2026-04-30T09:27:31Z INFO  noise_server] chunk=250  avg=12.17ms  last=18.03ms
+[2026-04-30T09:27:33Z INFO  noise_server] chunk=300  avg=12.13ms  last=16.00ms
+[2026-04-30T09:27:35Z INFO  noise_server] chunk=350  avg=12.26ms  last=13.50ms
+[2026-04-30T09:27:37Z INFO  noise_server] chunk=400  avg=12.27ms  last=15.57ms
+[2026-04-30T09:27:39Z INFO  noise_server] chunk=450  avg=12.32ms  last=16.43ms
+[2026-04-30T09:27:41Z INFO  noise_server] chunk=500  avg=12.71ms  last=14.15ms
+[2026-04-30T09:27:43Z INFO  noise_server] chunk=550  avg=12.57ms  last=9.33ms
+[2026-04-30T09:27:45Z INFO  noise_server] chunk=600  avg=12.62ms  last=8.06ms
+[2026-04-30T09:27:47Z INFO  noise_server] chunk=650  avg=12.69ms  last=8.21ms
+[2026-04-30T09:27:49Z INFO  noise_server] chunk=700  avg=12.69ms  last=8.34ms
+[2026-04-30T09:27:52Z INFO  noise_server] chunk=750  avg=12.70ms  last=21.25ms
+[2026-04-30T09:27:54Z INFO  noise_server] chunk=800  avg=12.43ms  last=8.62ms
+[2026-04-30T09:27:56Z INFO  noise_server] chunk=850  avg=12.19ms  last=8.06ms
+[2026-04-30T09:27:58Z INFO  noise_server] chunk=900  avg=12.07ms  last=12.32ms
+[2026-04-30T09:28:00Z INFO  noise_server] chunk=950  avg=12.12ms  last=16.05ms
+[2026-04-30T09:28:02Z INFO  noise_server] chunk=1000  avg=12.08ms  last=16.12ms
+[2026-04-30T09:28:05Z INFO  noise_server] chunk=1050  avg=12.08ms  last=11.32ms
+[2026-04-30T09:28:07Z INFO  noise_server] chunk=1100  avg=12.03ms  last=12.48ms
+[2026-04-30T09:28:09Z INFO  noise_server] chunk=1150  avg=11.99ms  last=9.87ms
+[2026-04-30T09:28:11Z INFO  noise_server] chunk=1200  avg=12.07ms  last=6.20ms
+[2026-04-30T09:28:14Z INFO  noise_server] chunk=1250  avg=12.11ms  last=4.33ms
+[2026-04-30T09:28:16Z INFO  noise_server] chunk=1300  avg=12.11ms  last=10.68ms
+[2026-04-30T09:28:18Z INFO  noise_server] chunk=1350  avg=12.15ms  last=15.84ms
+[2026-04-30T09:28:20Z INFO  noise_server] chunk=1400  avg=12.17ms  last=16.30ms
+[2026-04-30T09:28:22Z INFO  noise_server] chunk=1450  avg=12.15ms  last=9.60ms
+[2026-04-30T09:28:24Z INFO  noise_server] chunk=1500  avg=12.19ms  last=16.26ms
+[2026-04-30T09:28:27Z INFO  noise_server] chunk=1550  avg=12.13ms  last=11.58ms
+[2026-04-30T09:28:29Z INFO  noise_server] chunk=1600  avg=12.14ms  last=10.64ms
+[2026-04-30T09:28:31Z INFO  noise_server] chunk=1650  avg=12.06ms  last=8.36ms
+[2026-04-30T09:28:34Z INFO  noise_server] chunk=1700  avg=11.99ms  last=7.75ms
+[2026-04-30T09:28:36Z INFO  noise_server] chunk=1750  avg=12.01ms  last=9.50ms
+[2026-04-30T09:28:38Z INFO  noise_server] chunk=1800  avg=12.04ms  last=11.62ms
+^C
+C:\Users\Luciano Muratore\NoiseCancellation>

@@ -1,0 +1,94 @@
+C:\Users\Luciano Muratore\NoiseCancellation>engine\build\Debug\SleepFixTest.exe
+=== Experiment: Sleep Fix (microsecond precision) ===
+Sleep duration: 34829 microseconds
+              = 34.829 ms
+
+Connecting to Python server...
+Connected!
+
+
+=== Available Audio Devices ===
+[0] Microsoft Sound Mapper - Input | IN: 2 | OUT: 0 | SR: 44100 | API: MME
+[1] Microfoon (Realtek Audio) | IN: 2 | OUT: 0 | SR: 44100 | API: MME
+[2] Headset (WH-CH720N Hands-Free A | IN: 1 | OUT: 0 | SR: 44100 | API: MME
+[3] Microsoft Sound Mapper - Output | IN: 0 | OUT: 2 | SR: 44100 | API: MME
+[4] Headphones (WH-CH720N Stereo) | IN: 0 | OUT: 2 | SR: 44100 | API: MME
+[5] Headset (WH-CH720N Hands-Free A | IN: 0 | OUT: 1 | SR: 44100 | API: MME
+[6] Luidsprekers / koptelefoons (Re | IN: 0 | OUT: 6 | SR: 44100 | API: MME
+[7] Primary Sound Capture Driver | IN: 2 | OUT: 0 | SR: 44100 | API: Windows DirectSound
+[8] Microfoon (Realtek Audio) | IN: 2 | OUT: 0 | SR: 44100 | API: Windows DirectSound
+[9] Headset (WH-CH720N Hands-Free AG Audio) | IN: 1 | OUT: 0 | SR: 44100 | API: Windows DirectSound
+[10] Primary Sound Driver | IN: 0 | OUT: 2 | SR: 44100 | API: Windows DirectSound
+[11] Headphones (WH-CH720N Stereo) | IN: 0 | OUT: 2 | SR: 44100 | API: Windows DirectSound
+[12] Headset (WH-CH720N Hands-Free AG Audio) | IN: 0 | OUT: 1 | SR: 44100 | API: Windows DirectSound
+[13] Luidsprekers / koptelefoons (Realtek Audio) | IN: 0 | OUT: 6 | SR: 44100 | API: Windows DirectSound
+[14] Realtek ASIO | IN: 2 | OUT: 2 | SR: 44100 | API: ASIO
+[15] Headphones (WH-CH720N Stereo) | IN: 0 | OUT: 2 | SR: 44100 | API: Windows WASAPI
+[16] Headset (WH-CH720N Hands-Free AG Audio) | IN: 0 | OUT: 1 | SR: 16000 | API: Windows WASAPI
+[17] Luidsprekers / koptelefoons (Realtek Audio) | IN: 0 | OUT: 2 | SR: 48000 | API: Windows WASAPI
+[18] Microfoon (Realtek Audio) | IN: 2 | OUT: 0 | SR: 48000 | API: Windows WASAPI
+[19] Headset (WH-CH720N Hands-Free AG Audio) | IN: 1 | OUT: 0 | SR: 16000 | API: Windows WASAPI
+[20] Speakers 1 (Realtek HD Audio output with SST) | IN: 0 | OUT: 2 | SR: 44100 | API: Windows WDM-KS
+[21] Speakers 2 (Realtek HD Audio output with SST) | IN: 0 | OUT: 6 | SR: 44100 | API: Windows WDM-KS
+[22] PC Speaker (Realtek HD Audio output with SST) | IN: 2 | OUT: 0 | SR: 48000 | API: Windows WDM-KS
+[23] Stereo Mix (Realtek HD Audio Stereo input) | IN: 2 | OUT: 0 | SR: 48000 | API: Windows WDM-KS
+[24] Microphone (Realtek HD Audio Mic input) | IN: 2 | OUT: 0 | SR: 44100 | API: Windows WDM-KS
+[25] Headset (@System32\drivers\bthhfenum.sys,#2;%1 Hands-Free AG Audio%0
+;(WH-CH720N)) | IN: 0 | OUT: 1 | SR: 16000 | API: Windows WDM-KS[26] Headset (@System32\drivers\bthhfenum.sys,#2;%1 Hands-Free AG Audio%0
+;(WH-CH720N)) | IN: 1 | OUT: 0 | SR: 16000 | API: Windows WDM-KS[27] Headphones () | IN: 0 | OUT: 2 | SR: 44100 | API: Windows WDM-KS
+Default Input:  1
+Default Output: 4
+================================
+
+Using devices:
+  Input:  [1] Microfoon (Realtek Audio)
+  Output: [4] Headphones (WH-CH720N Stereo)
+
+Format supported!
+
+Audio stream started!
+  Sample Rate:    44100 Hz
+  Buffer Size:    1536 frames
+  Chunk time:     34.829 ms
+
+Speak into your mic ΓÇö noise will be cancelled!
+Press ENTER to stop...
+
+Chunks: sent=51 received=50 dropped=1 (1.96078%)
+Chunks: sent=100 received=100 dropped=0 (0%)
+Chunks: sent=150 received=150 dropped=0 (0%)
+Chunks: sent=200 received=200 dropped=0 (0%)
+Chunks: sent=250 received=250 dropped=0 (0%)
+Chunks: sent=300 received=300 dropped=0 (0%)
+Chunks: sent=350 received=350 dropped=0 (0%)
+Chunks: sent=400 received=400 dropped=0 (0%)
+Chunks: sent=450 received=450 dropped=0 (0%)
+Chunks: sent=500 received=500 dropped=0 (0%)
+Chunks: sent=550 received=550 dropped=0 (0%)
+Chunks: sent=600 received=600 dropped=0 (0%)
+Chunks: sent=650 received=650 dropped=0 (0%)
+Chunks: sent=700 received=700 dropped=0 (0%)
+Chunks: sent=750 received=750 dropped=0 (0%)
+Chunks: sent=800 received=800 dropped=0 (0%)
+Chunks: sent=850 received=850 dropped=0 (0%)
+Chunks: sent=900 received=900 dropped=0 (0%)
+Chunks: sent=950 received=950 dropped=0 (0%)
+Chunks: sent=1001 received=1000 dropped=1 (0.0999001%)
+Chunks: sent=1050 received=1050 dropped=0 (0%)
+Chunks: sent=1100 received=1100 dropped=0 (0%)
+Chunks: sent=1150 received=1150 dropped=0 (0%)
+Chunks: sent=1200 received=1200 dropped=0 (0%)
+Chunks: sent=1250 received=1250 dropped=0 (0%)
+Chunks: sent=1300 received=1300 dropped=0 (0%)
+Chunks: sent=1350 received=1350 dropped=0 (0%)
+Chunks: sent=1400 received=1400 dropped=0 (0%)
+Chunks: sent=1450 received=1450 dropped=0 (0%)
+Chunks: sent=1501 received=1500 dropped=1 (0.0666223%)
+Chunks: sent=1550 received=1550 dropped=0 (0%)
+Chunks: sent=1600 received=1600 dropped=0 (0%)
+Chunks: sent=1650 received=1650 dropped=0 (0%)
+Chunks: sent=1700 received=1700 dropped=0 (0%)
+Chunks: sent=1750 received=1750 dropped=0 (0%)
+Chunks: sent=1800 received=1800 dropped=0 (0%)
+^C
+C:\Users\Luciano Muratore\NoiseCancellation>

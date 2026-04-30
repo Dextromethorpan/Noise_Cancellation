@@ -76,19 +76,65 @@ and the subjective audio quality observed.
 
 ---
 
+### E04 — Three-Model DeepFilterNet3 Pipeline (Phase 5)
+- **Date:** 2026-04-30
+- **File:** engine/experiments/passthrough_sleep_fix.cpp (C++ side)
+- **Server:** ai/rust/src/main.rs (Rust side — three-model pipeline)
+- **Results:** results/phase5/phase5_cpp_terminal.txt,
+  results/phase5/phase5_rust_terminal.txt
+- **Frames:** 1536 | **Sleep:** microseconds (34829 us)
+- **Drop rate:** ~0.06% (3 drops in 1800 chunks)
+- **Queue depth:** N/A (synchronous Rust loop)
+- **Avg inference:** ~12ms (ONNX Runtime CPU, three models)
+- **Audio quality:** 4/5 — voice clearly audible, background noise suppressed,
+  perceptible delay (~50ms total latency)
+- **What worked:**
+  - All three ONNX models loading and running correctly
+  - enc.onnx → erb_dec.onnx → df_dec.onnx orchestration: correct
+  - DFState STFT analysis / ISTFT synthesis: correct
+  - ERB mask applied to full spectrum (481 bins)
+  - Deep filter coefficients applied to lower 96 bins
+  - rubato resampling 44100 ↔ 48000 Hz: correct
+  - Tested with YouTube audio playing simultaneously — voice remained
+    clearly separable and audible in feedback, confirming real-time
+    noise separation is working
+  - Pipeline stable over 1800+ chunks (~62 seconds)
+- **Key discovery:** ONNX models are stateless at the I/O level — GRU
+  hidden states are internal to the graph, not exposed as inputs/outputs.
+  No state management required in Rust.
+- **Tensor shapes confirmed by inspect_onnx_models.py:**
+  - `feat_erb` → `[1, 1, 1, 32]` | `feat_spec` → `[1, 2, 1, 96]`
+  - `emb` → `[1, 1, 512]` | `e0-e3` → `[1, 64, 1, 32/16/8/8]`
+  - `c0` → `[1, 64, 1, 96]` | `m` → `[1, 1, 1, 32]`
+  - `coefs` → `[1, 1, 96, 10]` (10 = 5 taps × {re, im})
+- **Remaining issues:**
+  - Latency ~50ms (C++ buffer 34.8ms + inference 12ms + resampling ~2ms)
+    — perceptible but tolerable for noise cancellation use case
+  - Some residual background noise — ERB/complex feature normalisation
+    is hand-rolled and may not exactly match the training preprocessing
+- **Dependencies added:**
+  - `rubato = 0.14.1` — high-quality resampling
+  - `ndarray = 0.15.6` — array operations
+  - `configparser = 2.1.0` — model config parsing
+
+---
+
 ## Comparison Summary
 
-| ID  | Experiment      | Drop rate | Inference | Queue  | Audio  | Sleep     |
-|-----|-----------------|-----------|-----------|--------|--------|-----------|
-| E01 | Baseline        | 47%       | ~25ms     | 10/10  | 2/5    | ms (bug)  |
-| E02 | Sleep Fix       | ~1%       | ~25ms     | 0/10   | 3/5    | us (fix)  |
-| E03 | Rust ONNX       | 0%        | 0.95ms    | N/A    | 1/5    | us (fix)  |
+| ID  | Experiment            | Drop rate | Inference | Queue  | Audio  | Sleep     |
+|-----|-----------------------|-----------|-----------|--------|--------|-----------|
+| E01 | Baseline              | 47%       | ~25ms     | 10/10  | 2/5    | ms (bug)  |
+| E02 | Sleep Fix             | ~1%       | ~25ms     | 0/10   | 3/5    | us (fix)  |
+| E03 | Rust ONNX             | 0%        | 0.95ms    | N/A    | 1/5    | us (fix)  |
+| E04 | Three-Model Pipeline  | ~0.06%    | ~12ms     | N/A    | 4/5    | us (fix)  |
 
 **Key findings:**
 - Sleep precision alone reduced drop rate from 47% to 1%
 - Rust eliminated drops entirely (0%) and inference is 26x faster
 - Audio quality regression in E03 is due to invalid model export, not the pipeline
-- The pipeline architecture is proven correct — the model is the remaining challenge
+- E04 confirms the three-model orchestration is correct — real noise suppression achieved
+- Inference cost of three models (~12ms) vs single broken model (0.95ms) is acceptable
+- Total latency ~50ms is the next optimisation target
 
 ---
 
@@ -101,10 +147,10 @@ venv\Scripts\activate
 python server/server_async.py
 ```
 
-### Rust server (E03)
+### Rust server (E03, E04)
 ```cmd
 cd C:\Users\Luciano Muratore\NoiseCancellation
-ai\rust\target\debug\noise_server.exe
+ai\rust\target\release\noise_server.exe
 ```
 
 ### C++ experiment
@@ -144,3 +190,10 @@ Assuming a complex model exports as a single file was wrong.
 **5. Rust eliminates GIL completely**
 The Python GIL caused ~1% drops even with perfect sleep timing. Rust has no
 GIL and produced 0% drops. For real-time audio, Rust is the correct choice.
+
+**6. Always inspect ONNX tensor names before writing inference code**
+The tensor names and shapes in the official DeepFilterNet3 export do not match
+the Python source variable names one-to-one. Running inspect_onnx_models.py
+before writing any Rust inference code saved significant debugging time and
+revealed that GRU states are internal to the graph — a fact not documented
+anywhere in the DeepFilterNet repository.

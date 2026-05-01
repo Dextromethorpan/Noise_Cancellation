@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Noise Cancellation Monitor</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0a0a0f;
+    --surface:   #12121a;
+    --border:    #1e1e2e;
+    --text:      #e2e2f0;
+    --muted:     #5a5a7a;
+    --noisy-col: #e05555;
+    --clean-col: #22c97a;
+    --vad-open:  #22c97a;
+    --vad-shut:  #e05555;
+    --accent:    #6366f1;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 16px;
+  }
+
+  header h1 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  header .subtitle {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  #status {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.3s;
+  }
+
+  #status-dot.live { background: var(--vad-open); box-shadow: 0 0 6px var(--vad-open); }
+  #status-dot.error { background: var(--vad-shut); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    position: relative;
+  }
+
+  .panel-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel-label .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+
+  .noisy-dot { background: var(--noisy-col); }
+  .clean-dot { background: var(--clean-col); }
+
+  .panel-label span.channel {
+    color: var(--muted);
+    font-weight: 400;
+    font-size: 9px;
+  }
+
+  canvas.wave {
+    width: 100%;
+    height: 80px;
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  canvas.spectrum {
+    width: 100%;
+    height: 60px;
+    display: block;
+  }
+
+  .section-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .bottom-row {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 16px;
+  }
+
+  .vad-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .vad-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .lsnr-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .lsnr-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    min-width: 72px;
+    transition: color 0.2s;
+  }
+
+  .lsnr-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .lsnr-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.08s, background 0.2s;
+  }
+
+  .threshold-line {
+    position: relative;
+    margin-bottom: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .vad-state {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  .vad-state.open { background: rgba(34,201,122,0.15); color: var(--vad-open); }
+  .vad-state.shut { background: rgba(224,85,85,0.15); color: var(--vad-shut); }
+
+  .stats-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .stat-key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .stat-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  .stat-val.good { color: var(--vad-open); }
+  .stat-val.bad  { color: var(--vad-shut); }
+
+  .controls {
+    margin-top: 16px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  button {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 8px 18px;
+    border-radius: 4px;
+    border: 1px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  button:hover { background: var(--accent); color: #fff; }
+  button:disabled { opacity: 0.3; cursor: default; }
+  button:disabled:hover { background: transparent; color: var(--accent); }
+
+  select {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 7px 12px;
+  }
+
+  .hint {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 12px;
+    line-height: 1.6;
+  }
+
+  .hint strong { color: var(--text); }
+
+  .diff-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    background: rgba(99,102,241,0.15);
+    color: var(--accent);
+    border: 1px solid rgba(99,102,241,0.3);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Noise Cancellation Monitor</h1>
+  <span class="subtitle">mic input vs headphone output — real time</span>
+  <div id="status">
+    <div id="status-dot"></div>
+    <span id="status-text">waiting</span>
+  </div>
+</header>
+
+<div class="grid">
+  <div class="panel">
+    <div class="panel-label">
+      <div class="dot noisy-dot"></div>
+      Microphone input
+      <span class="channel">(noisy)</span>
+    </div>
+    <div class="section-title">Waveform</div>
+    <canvas class="wave" id="wave-noisy"></canvas>
+    <div class="section-title">Frequency spectrum</div>
+    <canvas class="spectrum" id="spec-noisy"></canvas>
+    <div class="diff-badge" id="rms-noisy">— dBFS</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-label">
+      <div class="dot clean-dot"></div>
+      Headphone output
+      <span class="channel">(Stereo Mix / clean)</span>
+    </div>
+    <div class="section-title">Waveform</div>
+    <canvas class="wave" id="wave-clean"></canvas>
+    <div class="section-title">Frequency spectrum</div>
+    <canvas class="spectrum" id="spec-clean"></canvas>
+    <div class="diff-badge" id="rms-clean">— dBFS</div>
+  </div>
+</div>
+
+<div class="bottom-row">
+  <div class="vad-panel">
+    <div class="vad-label">Voice activity (lsnr proxy)</div>
+    <div class="lsnr-row">
+      <div class="lsnr-value" id="lsnr-num">—</div>
+      <div style="flex:1;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+          <span style="font-family:JetBrains Mono,monospace;font-size:9px;color:var(--muted);">-30 dBFS</span>
+          <span style="font-family:JetBrains Mono,monospace;font-size:9px;color:var(--accent);">threshold</span>
+          <span style="font-family:JetBrains Mono,monospace;font-size:9px;color:var(--muted);">0 dBFS</span>
+        </div>
+        <div class="lsnr-track">
+          <div class="lsnr-fill" id="lsnr-fill"></div>
+        </div>
+        <div style="margin-top:8px;">
+          <span class="vad-state shut" id="vad-state-badge">silent</span>
+        </div>
+      </div>
+    </div>
+    <div class="hint">
+      This bar shows the <strong>energy difference</strong> between mic and output.
+      When it is green and above threshold, the Rust VAD gate is open and your voice passes through.
+      When red, the gate is shut and silence is sent to the headphones.<br><br>
+      <strong>What to look for:</strong> if the mic waveform has signal but the output waveform is flat — the gate is cutting your speech. If the output spectrum has high-frequency energy when you are not speaking — noise is leaking through.
+    </div>
+  </div>
+
+  <div class="stats-panel">
+    <div class="vad-label">Live metrics</div>
+    <div class="stat-row">
+      <span class="stat-key">Mic RMS</span>
+      <span class="stat-val" id="s-mic-rms">—</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-key">Output RMS</span>
+      <span class="stat-val" id="s-out-rms">—</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-key">Suppression</span>
+      <span class="stat-val good" id="s-suppress">—</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-key">Mic peak freq</span>
+      <span class="stat-val" id="s-mic-peak">—</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-key">Out peak freq</span>
+      <span class="stat-val" id="s-out-peak">—</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-key">Gate state</span>
+      <span class="stat-val" id="s-gate">—</span>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <button id="btn-start" onclick="startMonitor()">Connect microphones</button>
+  <button id="btn-stop" onclick="stopMonitor()" disabled>Stop</button>
+  <select id="mix-device">
+    <option value="">Select Stereo Mix device…</option>
+  </select>
+</div>
+
+<p class="hint" style="margin-top:12px;">
+  <strong>Setup:</strong> Select your microphone, then select <strong>Stereo Mix (Realtek)</strong> as the second device.
+  Make sure Stereo Mix is enabled in Control Panel → Sound → Recording.
+</p>
+
+<script>
+let ctx, micStream, mixStream, micNode, mixNode, animId;
+let micAnalyser, mixAnalyser;
+const FFT = 2048;
+const THRESHOLD_RMS = -40; // dBFS — gate open above this
+
+function dBFS(rms) {
+  if (rms < 1e-9) return -90;
+  return 20 * Math.log10(rms);
+}
+
+function rms(buf) {
+  let s = 0;
+  for (let i = 0; i < buf.length; i++) s += buf[i] * buf[i];
+  return Math.sqrt(s / buf.length);
+}
+
+function peakFreq(freqBuf, sampleRate) {
+  let max = 0, idx = 1;
+  for (let i = 1; i < freqBuf.length; i++) {
+    if (freqBuf[i] > max) { max = freqBuf[i]; idx = i; }
+  }
+  const hz = idx * sampleRate / (freqBuf.length * 2);
+  return hz < 1000 ? Math.round(hz) + ' Hz' : (hz / 1000).toFixed(1) + ' kHz';
+}
+
+async function populateDevices() {
+  await navigator.mediaDevices.getUserMedia({ audio: true });
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  const sel = document.getElementById('mix-device');
+  devices.filter(d => d.kind === 'audioinput').forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.deviceId;
+    opt.textContent = d.label || d.deviceId.slice(0, 20);
+    if (d.label.toLowerCase().includes('stereo mix') || d.label.toLowerCase().includes('mix')) {
+      opt.selected = true;
+    }
+    sel.appendChild(opt);
+  });
+}
+
+async function startMonitor() {
+  document.getElementById('btn-start').disabled = true;
+  setStatus('connecting…', '');
+
+  try {
+    ctx = new AudioContext({ sampleRate: 44100 });
+
+    micStream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+    });
+
+    const mixId = document.getElementById('mix-device').value;
+    const mixConstraints = mixId
+      ? { audio: { deviceId: { exact: mixId }, echoCancellation: false, noiseSuppression: false, autoGainControl: false } }
+      : { audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } };
+    mixStream = await navigator.mediaDevices.getUserMedia(mixConstraints);
+
+    micAnalyser = ctx.createAnalyser(); micAnalyser.fftSize = FFT;
+    mixAnalyser = ctx.createAnalyser(); mixAnalyser.fftSize = FFT;
+
+    ctx.createMediaStreamSource(micStream).connect(micAnalyser);
+    ctx.createMediaStreamSource(mixStream).connect(mixAnalyser);
+
+    resizeCanvases();
+    setStatus('live', 'live');
+    document.getElementById('btn-stop').disabled = false;
+    animId = requestAnimationFrame(draw);
+  } catch(e) {
+    setStatus('error: ' + e.message, 'error');
+    document.getElementById('btn-start').disabled = false;
+  }
+}
+
+function stopMonitor() {
+  cancelAnimationFrame(animId);
+  if (micStream) micStream.getTracks().forEach(t => t.stop());
+  if (mixStream) mixStream.getTracks().forEach(t => t.stop());
+  if (ctx) ctx.close();
+  setStatus('stopped', '');
+  document.getElementById('btn-start').disabled = false;
+  document.getElementById('btn-stop').disabled = true;
+}
+
+function setStatus(text, cls) {
+  document.getElementById('status-text').textContent = text;
+  const dot = document.getElementById('status-dot');
+  dot.className = cls;
+}
+
+function resizeCanvases() {
+  ['wave-noisy','wave-clean','spec-noisy','spec-clean'].forEach(id => {
+    const c = document.getElementById(id);
+    c.width  = c.offsetWidth  * devicePixelRatio;
+    c.height = c.offsetHeight * devicePixelRatio;
+  });
+}
+
+function drawWave(canvasId, timeBuf, color) {
+  const c = document.getElementById(canvasId);
+  const ctx2 = c.getContext('2d');
+  const w = c.width, h = c.height;
+  ctx2.clearRect(0, 0, w, h);
+  ctx2.strokeStyle = color;
+  ctx2.lineWidth = 1.5 * devicePixelRatio;
+  ctx2.beginPath();
+  const step = Math.ceil(timeBuf.length / w);
+  for (let x = 0; x < w; x++) {
+    const i = x * step;
+    const y = (1 - timeBuf[i]) * h / 2;
+    x === 0 ? ctx2.moveTo(x, y) : ctx2.lineTo(x, y);
+  }
+  ctx2.stroke();
+
+  // centre line
+  ctx2.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx2.lineWidth = 1;
+  ctx2.beginPath();
+  ctx2.moveTo(0, h / 2);
+  ctx2.lineTo(w, h / 2);
+  ctx2.stroke();
+}
+
+function drawSpectrum(canvasId, freqBuf, color) {
+  const c = document.getElementById(canvasId);
+  const ctx2 = c.getContext('2d');
+  const w = c.width, h = c.height;
+  ctx2.clearRect(0, 0, w, h);
+  const bins = 80;
+  const bw = w / bins;
+  const len = Math.floor(freqBuf.length * 0.6); // show up to ~13 kHz
+  for (let b = 0; b < bins; b++) {
+    const start = Math.floor(b * len / bins);
+    const end   = Math.floor((b + 1) * len / bins);
+    let max = 0;
+    for (let i = start; i < end; i++) max = Math.max(max, freqBuf[i]);
+    const norm = max / 255;
+    const barH = norm * h;
+    const alpha = 0.4 + norm * 0.6;
+    ctx2.fillStyle = color.replace(')', `,${alpha.toFixed(2)})`).replace('rgb', 'rgba');
+    ctx2.fillRect(b * bw + 1, h - barH, bw - 2, barH);
+  }
+}
+
+function draw() {
+  const timeMic  = new Float32Array(micAnalyser.fftSize);
+  const timeMix  = new Float32Array(mixAnalyser.fftSize);
+  const freqMic  = new Uint8Array(micAnalyser.frequencyBinCount);
+  const freqMix  = new Uint8Array(mixAnalyser.frequencyBinCount);
+
+  micAnalyser.getFloatTimeDomainData(timeMic);
+  mixAnalyser.getFloatTimeDomainData(timeMix);
+  micAnalyser.getByteFrequencyData(freqMic);
+  mixAnalyser.getByteFrequencyData(freqMix);
+
+  drawWave('wave-noisy', timeMic, '#e05555');
+  drawWave('wave-clean', timeMix, '#22c97a');
+  drawSpectrum('spec-noisy', freqMic, 'rgb(224,85,85)');
+  drawSpectrum('spec-clean', freqMix, 'rgb(34,201,122)');
+
+  const micRms  = rms(timeMic);
+  const mixRms  = rms(timeMix);
+  const micDb   = dBFS(micRms);
+  const mixDb   = dBFS(mixRms);
+  const suppress = micDb > -80 ? Math.max(0, micDb - mixDb) : 0;
+  const gateOpen = micDb > THRESHOLD_RMS;
+
+  // lsnr bar (proxy: mic energy relative to threshold)
+  const pct = Math.max(0, Math.min(100, (micDb + 60) / 60 * 100));
+  document.getElementById('lsnr-fill').style.width = pct.toFixed(1) + '%';
+  document.getElementById('lsnr-fill').style.background = gateOpen ? '#22c97a' : '#e05555';
+  document.getElementById('lsnr-num').textContent = micDb.toFixed(1);
+  document.getElementById('lsnr-num').style.color = gateOpen ? '#22c97a' : '#e05555';
+
+  const badge = document.getElementById('vad-state-badge');
+  badge.textContent = gateOpen ? 'voice' : 'silent';
+  badge.className   = 'vad-state ' + (gateOpen ? 'open' : 'shut');
+
+  document.getElementById('rms-noisy').textContent = micDb.toFixed(1) + ' dBFS';
+  document.getElementById('rms-clean').textContent = mixDb.toFixed(1) + ' dBFS';
+
+  document.getElementById('s-mic-rms').textContent  = micDb.toFixed(1) + ' dB';
+  document.getElementById('s-out-rms').textContent  = mixDb.toFixed(1) + ' dB';
+  document.getElementById('s-suppress').textContent = suppress.toFixed(1) + ' dB';
+  document.getElementById('s-suppress').className   = 'stat-val ' + (suppress > 6 ? 'good' : suppress > 0 ? '' : 'bad');
+  document.getElementById('s-mic-peak').textContent = peakFreq(freqMic, ctx.sampleRate);
+  document.getElementById('s-out-peak').textContent = peakFreq(freqMix, ctx.sampleRate);
+  document.getElementById('s-gate').textContent     = gateOpen ? 'OPEN' : 'SHUT';
+  document.getElementById('s-gate').className       = 'stat-val ' + (gateOpen ? 'good' : 'bad');
+
+  animId = requestAnimationFrame(draw);
+}
+
+window.addEventListener('load', populateDevices);
+window.addEventListener('resize', () => { if (ctx) resizeCanvases(); });
+</script>
+</body>
+</html>

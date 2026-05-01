@@ -8,10 +8,15 @@ edition = "2021"
 name = "noise_server"
 path = "src/main.rs"
 
-# Phase 6 — continuous stream pipeline (current)
+# Phase 6 — continuous stream pipeline
 [[bin]]
 name = "stream_server"
 path = "src/stream_server.rs"
+
+# Phase 7 — continuous stream + Voice Activity Detection (current)
+[[bin]]
+name = "stream_server_vad"
+path = "src/stream_server_vad.rs"
 
 [dependencies]
 zmq         = "0.10"

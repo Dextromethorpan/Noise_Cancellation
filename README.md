@@ -251,6 +251,3 @@ https://github.com/Dextromethorpan/Noise_Cancellation
 
 ---
 
-## License
-
-MIT

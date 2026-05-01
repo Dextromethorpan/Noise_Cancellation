@@ -109,9 +109,8 @@ and the subjective audio quality observed.
   - `coefs` → `[1, 1, 96, 10]` (10 = 5 taps × {re, im})
 - **Remaining issues:**
   - Latency ~50ms (C++ buffer 34.8ms + inference 12ms + resampling ~2ms)
-    — perceptible but tolerable for noise cancellation use case
-  - Some residual background noise — ERB/complex feature normalisation
-    is hand-rolled and may not exactly match the training preprocessing
+  - Chunk boundary glitches — shshshsh artifact at every 35ms boundary
+  - ~15% voice loss due to resampling mismatch (zeros padding output)
 - **Dependencies added:**
   - `rubato = 0.14.1` — high-quality resampling
   - `ndarray = 0.15.6` — array operations
@@ -119,22 +118,64 @@ and the subjective audio quality observed.
 
 ---
 
+### E05 — Continuous Stream Pipeline (Phase 6)
+- **Date:** 2026-04-30
+- **File:** engine/experiments/passthrough_sleep_fix.cpp (C++ side)
+- **Server:** ai/rust/src/stream_server.rs (Rust side — continuous stream)
+- **Results:** results/phase6/phase6_cpp_terminal.txt,
+  results/phase6/phase6_rust_terminal.txt
+- **Frames:** 1536 | **Sleep:** microseconds (34829 us)
+- **Drop rate:** ~0% (stable over 8250+ chunks)
+- **Queue depth:** N/A (synchronous Rust loop)
+- **Avg inference:** ~11ms (ONNX Runtime CPU, three models)
+- **Audio quality:** 4/5 — chunk boundary glitches eliminated, voice
+  continuous and complete, some residual background noise remains
+- **What worked:**
+  - Continuous ring buffer architecture: no resets at chunk boundaries
+  - proc_buf_48 and output_buf_44 flow seamlessly across chunks
+  - Long vowel test ("aaaaa" 2-3 seconds): all sound heard, no dropout
+  - All five words heard clearly in "uno dos tres cuatro cinco" test
+  - Pipeline stable over 8250+ chunks (~4.7 minutes)
+  - proc_buf always 0 — no accumulation backlog
+  - out_buf oscillates 600-1500 — healthy steady-state flow
+- **Key discovery — lsnr signal analysis:**
+  - Encoder `lsnr` output IS a reliable voice activity signal
+  - Silence → lsnr clusters at -10 to -15 dB consistently
+  - Speaking → lsnr clusters at +20 to +35 dB consistently
+  - Earlier tests appeared random because room noise was present
+  - Clean separation confirmed with 2-min silence / 2-min speech / 2-min
+    silence test at chunk=8150-8250
+  - Threshold of +10 dB cleanly separates voice from silence
+- **Remaining issues:**
+  - Residual background noise when not speaking (room noise leaks through)
+  - High-frequency consonants (agudos: s, sh, f, t) are muffled
+  - Low-frequency sounds (graves) reproduce correctly
+  - Root cause: hand-rolled feat_erb / feat_cplx normalisation does not
+    exactly match the training preprocessing — model receives imprecise
+    features and produces weak masks
+- **Next step (Phase 7):** Implement lsnr-based Voice Activity Detection
+  — output silence when lsnr < 10 dB, pass model output when lsnr ≥ 10 dB
+
+---
+
 ## Comparison Summary
 
-| ID  | Experiment            | Drop rate | Inference | Queue  | Audio  | Sleep     |
-|-----|-----------------------|-----------|-----------|--------|--------|-----------|
-| E01 | Baseline              | 47%       | ~25ms     | 10/10  | 2/5    | ms (bug)  |
-| E02 | Sleep Fix             | ~1%       | ~25ms     | 0/10   | 3/5    | us (fix)  |
-| E03 | Rust ONNX             | 0%        | 0.95ms    | N/A    | 1/5    | us (fix)  |
-| E04 | Three-Model Pipeline  | ~0.06%    | ~12ms     | N/A    | 4/5    | us (fix)  |
+| ID  | Experiment              | Drop rate | Inference | Queue  | Audio  | Sleep     |
+|-----|-------------------------|-----------|-----------|--------|--------|-----------|
+| E01 | Baseline                | 47%       | ~25ms     | 10/10  | 2/5    | ms (bug)  |
+| E02 | Sleep Fix               | ~1%       | ~25ms     | 0/10   | 3/5    | us (fix)  |
+| E03 | Rust ONNX               | 0%        | 0.95ms    | N/A    | 1/5    | us (fix)  |
+| E04 | Three-Model Pipeline    | ~0.06%    | ~12ms     | N/A    | 4/5    | us (fix)  |
+| E05 | Continuous Stream       | ~0%       | ~11ms     | N/A    | 4/5    | us (fix)  |
 
 **Key findings:**
 - Sleep precision alone reduced drop rate from 47% to 1%
 - Rust eliminated drops entirely (0%) and inference is 26x faster
 - Audio quality regression in E03 is due to invalid model export, not the pipeline
 - E04 confirms the three-model orchestration is correct — real noise suppression achieved
-- Inference cost of three models (~12ms) vs single broken model (0.95ms) is acceptable
-- Total latency ~50ms is the next optimisation target
+- E05 eliminates chunk boundary glitches via continuous ring buffers
+- lsnr output from encoder is a reliable VAD signal — threshold at +10 dB
+- Remaining quality issues trace to feature extraction mismatch with training
 
 ---
 
@@ -147,13 +188,25 @@ venv\Scripts\activate
 python server/server_async.py
 ```
 
-### Rust server (E03, E04)
+### Rust server — Phase 5 (E03, E04)
 ```cmd
 cd C:\Users\Luciano Muratore\NoiseCancellation
 ai\rust\target\release\noise_server.exe
 ```
 
-### C++ experiment
+### Rust server — Phase 6 (E05)
+```cmd
+cd C:\Users\Luciano Muratore\NoiseCancellation
+ai\rust\target\release\stream_server.exe
+```
+
+### Rust server — debug mode (lsnr logging)
+```cmd
+set RUST_LOG=debug
+ai\rust\target\release\stream_server.exe
+```
+
+### C++ engine
 ```cmd
 cd engine/build/Debug
 SleepFixTest.exe
@@ -162,7 +215,7 @@ SleepFixTest.exe
 ### Save results
 ```cmd
 chcp 65001
-SleepFixTest.exe > ../../../results/experiment/experiment_name_cpp.txt
+SleepFixTest.exe > ../../../results/phase6/phase6_cpp_terminal.txt
 ```
 
 ---
@@ -197,3 +250,15 @@ the Python source variable names one-to-one. Running inspect_onnx_models.py
 before writing any Rust inference code saved significant debugging time and
 revealed that GRU states are internal to the graph — a fact not documented
 anywhere in the DeepFilterNet repository.
+
+**7. Chunk boundary resets corrupt stateful DSP**
+The STFT overlap-add buffers inside DFState are stateful. Resampling and
+processing audio in isolated per-chunk calls resets this state at every
+boundary, producing glitches. The fix is a continuous ring buffer that
+feeds the DSP pipeline without interruption.
+
+**8. Diagnose model outputs before assuming feature extraction is wrong**
+The lsnr signal appeared unreliable in short tests because room noise was
+always present. A structured silence/speech/silence test over several minutes
+revealed that lsnr cleanly separates voice from silence at a +10 dB threshold.
+Always test with controlled conditions before concluding a signal is broken.
